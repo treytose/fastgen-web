@@ -1,18 +1,49 @@
-import React, { FC, useContext } from 'react';
-import { ThemeProvider } from '@mui/material';
+import React, { FC, useContext, useEffect, useState } from "react";
+import { ThemeProvider, Container, Box } from "@mui/material";
 
-import SettingsContext from '../store/SettingsContext';
+import SettingsContext from "../store/SettingsContext";
+import PageLoading from "./PageLoading";
+import Header from "./Header";
 
-const Wrapper: FC<{children: React.ReactNode}> = ({children}) => {
-    const settingsCtx = useContext(SettingsContext);
+const Wrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const settingsCtx = useContext(SettingsContext);
+  const [pageLoaded, setPageLoaded] = useState(false);
 
-    return (
-        <>            
-            <ThemeProvider theme={settingsCtx.theme.theme}>   
-                { children }
-            </ThemeProvider>      
-        </>
-    )
-}
+  useEffect(() => {
+    if (!pageLoaded) {
+      setPageLoaded(true);
+    }
+  }, [pageLoaded]);
+
+  return (
+    <>
+      {pageLoaded ? (
+        <ThemeProvider theme={settingsCtx.theme.theme}>
+          <Container
+            maxWidth={false}
+            disableGutters
+            sx={{
+              backgroundColor: "background.default",
+              height: "100vh",
+            }}
+          >
+            <Header />
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                padding: "3rem",
+              }}
+            >
+              {children}
+            </Box>
+          </Container>
+        </ThemeProvider>
+      ) : (
+        <PageLoading theme={settingsCtx.theme.theme} />
+      )}
+    </>
+  );
+};
 
 export default Wrapper;

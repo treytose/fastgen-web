@@ -1,38 +1,45 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createContext, FC } from "react";
-import { themes, type ThemeSelection } from "../components/themes";
-
-
+import { themes, type ThemeSelection } from "../themes/themes";
 
 type Settings = {
-    theme: ThemeSelection
-    setTheme: Function
-}
+    theme: ThemeSelection;
+    setTheme: Function;
+};
 
 const defaultSettings: Settings = {
-    theme: themes.dark,
-    setTheme: () => { console.log("RAN"); }
-}
+    theme: themes.default,
+    setTheme: () => {},
+};
 
 const SettingsContext = createContext<Settings>({
-    ...defaultSettings
+    ...defaultSettings,
 });
 
-
-export const SettingsProvider: FC<{children: React.ReactNode}> = ({children}) => {
-
-    const [theme, setTheme] = useState(themes.dark);
-
+export const SettingsProvider: FC<{ children: React.ReactNode }> = ({
+    children,
+}) => {
+    const [theme, setTheme] = useState(themes.default);
     const contextValue: Settings = {
-        theme, 
-        setTheme
-    }
+        theme,
+        setTheme,
+    };
+
+    useEffect(() => {
+        const preferredThemeName =
+            localStorage.getItem("preferred-theme") || "default";
+        const preferredTheme =
+            preferredThemeName in themes
+                ? themes[preferredThemeName]
+                : themes.default;
+        setTheme(preferredTheme);
+    }, []);
 
     return (
         <SettingsContext.Provider value={contextValue}>
-            { children }
+            {children}
         </SettingsContext.Provider>
-    )
-}
+    );
+};
 
 export default SettingsContext;
