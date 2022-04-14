@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import {
-  Paper,
+  Typography,
   Box,
   FormControl,
   FormControlLabel,
@@ -12,7 +12,7 @@ import {
 import SettingsContext from "../store/SettingsContext";
 import { themes } from "../themes/themes";
 
-import Card from "./Card";
+import ColumnCard from "../components/ColumnCard";
 
 const ThemeSelection = () => {
   const settingsCtx = useContext(SettingsContext);
@@ -24,11 +24,9 @@ const ThemeSelection = () => {
   };
 
   return (
-    <Card sx={{ height: "100%" }}>
+    <ColumnCard title="Theme">
       <Box>
-        Current Theme: {settingsCtx.theme.name}
         <FormControl>
-          <FormLabel id="demo-row-radio-buttons-group-label">Theme</FormLabel>
           <RadioGroup
             row
             aria-labelledby="demo-row-radio-buttons-group-label"
@@ -45,7 +43,7 @@ const ThemeSelection = () => {
           </RadioGroup>
         </FormControl>
       </Box>
-    </Card>
+    </ColumnCard>
   );
 };
 

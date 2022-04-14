@@ -1,28 +1,32 @@
 import type { NextPage } from "next";
 import Link from "next/link";
-import { Container, Grid, Button } from "@mui/material";
-import ThemeSelection from "../components/ThemeSelect";
+import { Container, Grid, Button, Typography } from "@mui/material";
+import ThemeSelection from "../sections/ThemeSelect";
+import Guide from "../sections/Guide";
 
 // components
-import Card from "../components/Card";
+import ColumnCard from "../components/ColumnCard";
 
 const Home: NextPage = () => {
-    return (
-        <Container>
-            <Grid container spacing={2}>
-                <Grid item xs={8}>
-                    <Card sx={{ height: "100%" }}>
-                        <Link href="/generate/entity">
-                            <Button variant="contained">Create Entity</Button>
-                        </Link>
-                    </Card>
-                </Grid>
-                <Grid item xs={4}>
-                    <ThemeSelection />
-                </Grid>
-            </Grid>
-        </Container>
-    );
+  return (
+    <Container>
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <ColumnCard title="Tools">
+            <Link href="/generate/entity">
+              <Button variant="contained">Create Entity</Button>
+            </Link>
+          </ColumnCard>
+        </Grid>
+        <Grid item xs={4}>
+          <ThemeSelection />
+        </Grid>
+        <Grid item xs={12}>
+          <Guide />
+        </Grid>
+      </Grid>
+    </Container>
+  );
 };
 
 export default Home;
