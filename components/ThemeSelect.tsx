@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import {
   Paper,
   Box,
@@ -12,6 +12,8 @@ import {
 import SettingsContext from "../store/SettingsContext";
 import { themes } from "../themes/themes";
 
+import Card from "./Card";
+
 const ThemeSelection = () => {
   const settingsCtx = useContext(SettingsContext);
 
@@ -22,8 +24,8 @@ const ThemeSelection = () => {
   };
 
   return (
-    <Paper sx={{ height: "100%" }}>
-      <Box sx={{ padding: "2rem" }}>
+    <Card sx={{ height: "100%" }}>
+      <Box>
         Current Theme: {settingsCtx.theme.name}
         <FormControl>
           <FormLabel id="demo-row-radio-buttons-group-label">Theme</FormLabel>
@@ -43,7 +45,7 @@ const ThemeSelection = () => {
           </RadioGroup>
         </FormControl>
       </Box>
-    </Paper>
+    </Card>
   );
 };
 
