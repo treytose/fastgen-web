@@ -26,6 +26,11 @@ const darkTheme = createTheme({
     text: {
       primary: "#FFF",
       secondary: "#FFF",
+      disabled: grey[200],
+    },
+    action: {
+      disabled: "#FFF",
+      disabledBackground: "#000",
     },
   },
 });
