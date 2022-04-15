@@ -19,14 +19,7 @@ const Wrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
     <>
       {pageLoaded ? (
         <ThemeProvider theme={settingsCtx.theme.theme}>
-          <Container
-            maxWidth={false}
-            disableGutters
-            sx={{
-              backgroundColor: "background.default",
-              height: "100vh",
-            }}
-          >
+          <Container maxWidth={false} disableGutters>
             <Header />
             <Box
               sx={{

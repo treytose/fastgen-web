@@ -112,10 +112,8 @@ const Header = () => {
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
-              <Link href={page.path}>
-                <Button key={page.name} onClick={handleCloseNavMenu}>
-                  {page.name}
-                </Button>
+              <Link key={page.name} href={page.path}>
+                <Button onClick={handleCloseNavMenu}>{page.name}</Button>
               </Link>
             ))}
           </Box>
