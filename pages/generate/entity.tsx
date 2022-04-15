@@ -64,7 +64,7 @@ const Entity = () => {
 
   useEffect(() => {
     const pkName = `${entity}id`;
-    const libName = `${entity}`;
+    const libName = `o${toTitle(entity)}`;
     const modelName = `${toTitle(entity)}Model`;
     const className = toTitle(entity);
 
@@ -109,7 +109,7 @@ const Entity = () => {
 
         class ${className}:
             async def get_${entity}_list(self, limit: int = 100):
-                ${entity} = await db.fetchall("SELECT * FROM ${entity} LIMIT :limit", {"${pkName}": ${pkName}, "limit": limit})
+                ${entity} = await db.fetchall("SELECT * FROM ${entity} LIMIT :limit", {"limit": limit})
                 return ${entity}
 
             async def get_${entity}(self, ${pkName}: int):
@@ -139,12 +139,9 @@ const Entity = () => {
     const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
 
     const types = columns
-      .map((c) =>
-        c.pk
-          ? `${c.name}: Optional[int] = None`
-          : `          ${c.name}: ${typeMap[c.type]}`
-      )
-      .join("\n");
+      .filter((c) => !c.pk)
+      .map((c) => `${c.name}: ${typeMap[c.type]}`)
+      .join(" \n          ");
 
     const schemaCode = `
       from pydantic import BaseModel
@@ -155,7 +152,7 @@ const Entity = () => {
     `;
 
     const sqlCode = `
-      CREATE TABLE IF NOT EXSISTS ${entity} (
+      CREATE TABLE IF NOT EXISTS ${entity} (
         ${columns
           .map((c) =>
             c.pk

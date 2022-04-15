@@ -95,7 +95,7 @@ const EntityColumn: FC<Props> = ({
             )}
           </Grid>
           <Grid xs={4}>
-            {["VARCHAR", "INT"].includes(ecolumn.type) && (
+            {["VARCHAR", "INT"].includes(ecolumn.type) && !ecolumn.pk && (
               <Stack direction="row">
                 <Typography>(</Typography>
                 <TextField
@@ -116,7 +116,7 @@ const EntityColumn: FC<Props> = ({
       <Grid item xs={2} justifyContent="center" sx={{ textAlign: "center" }}>
         {ecolumn.pk && (
           <Tooltip title="Primary Key" placement="top">
-            <KeyIcon />
+            <KeyIcon color="primary" />
           </Tooltip>
         )}
       </Grid>
