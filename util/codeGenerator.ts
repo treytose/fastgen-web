@@ -85,7 +85,13 @@ export default function generateCode(entity: string, columns: EColumn[]) {
 
   const types = columns
     .filter((c) => !c.pk)
-    .map((c) => `${c.name}: ${typeMap[c.type]}`)
+    .map((c) => {
+      if (c.optional) {
+        return `${c.name}: Optional[${typeMap[c.type]}] = None`;
+      } else {
+        return `${c.name}: ${typeMap[c.type]}`;
+      }
+    })
     .join(" \n          ");
 
   const schemaCode = `
