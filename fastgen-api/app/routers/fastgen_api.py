@@ -5,6 +5,10 @@ from app.schemas.fastgen_api import Fastgen_apiModel
 router = APIRouter()
 oFastgen_api = Fastgen_api()
 
+@router.get("/fastgen_api/schema")
+async def get_fastgen_schema():
+    return await oFastgen_api.get_fastgen_api_schema()
+
 @router.get("/fastgen_api")
 async def get_fastgen_api_list(limit: int = 100):            
     return await oFastgen_api.get_fastgen_api_list(limit)

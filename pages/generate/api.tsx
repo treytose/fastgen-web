@@ -15,6 +15,7 @@ import {
 import ColumnCard from "../../components/ColumnCard";
 import { useRouter } from "next/router";
 import AppContext from "../../store/AppContext";
+import FastForm from "../../components/FastForm";
 
 const API = () => {
   const nameRef = useRef<HTMLInputElement>();
@@ -44,7 +45,9 @@ const API = () => {
       .catch((error) => {
         console.log(error);
         setLoading(false);
-        setError(error.response.data.detail);
+        // setError(error.response.data.detail);
+        console.log(error.response.data);
+        setError("HTTP 500 - Internal Server Error");
       });
   };
 
@@ -58,39 +61,7 @@ const API = () => {
         <Grid item xs={2}></Grid>
         <Grid item xs={8}>
           <ColumnCard>
-            {loading ? (
-              <Typography variant="h5"> Loading </Typography>
-            ) : (
-              <Stack spacing={2}>
-                {error && <Alert severity="error"> {error} </Alert>}
-                <Typography variant="h6">Create a new Fast API</Typography>
-
-                <TextField
-                  variant="standard"
-                  label="API Name"
-                  inputRef={nameRef}
-                />
-                <TextField
-                  variant="standard"
-                  label="Absolute Path"
-                  inputRef={pathRef}
-                />
-                <br />
-                <Typography> Python Version </Typography>
-                <Select
-                  onChange={handleVersionChange}
-                  label="Python Version"
-                  variant="standard"
-                  value={pythonVersion}
-                >
-                  <MenuItem value="python3.6"> Python 3.6 </MenuItem>
-                  <MenuItem value="python3.9"> Python 3.9 </MenuItem>
-                </Select>
-                <Button fullWidth variant="contained" onClick={handleSubmit}>
-                  Create
-                </Button>
-              </Stack>
-            )}
+            <FastForm entity="fastgen_api" />
           </ColumnCard>
         </Grid>
       </Grid>

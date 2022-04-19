@@ -9,6 +9,9 @@ class Fastgen_api:
 
     async def generate(self):
         await db.create_schema("fastgen_api", Fastgen_apiModel.schema())
+
+    async def get_fastgen_api_schema(self):
+        return Fastgen_apiModel.schema()
         
     async def get_fastgen_api_list(self, limit: int = 100):
         fastgen_api = await db.fetchall("SELECT * FROM fastgen_api LIMIT :limit", {"limit": limit})
