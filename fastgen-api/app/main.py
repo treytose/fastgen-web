@@ -1,8 +1,6 @@
 from fastapi import FastAPI
-from typing import Optional
-from pydantic import BaseModel
-
 from .dependencies import db
+
 # routers 
 from .routers import fastgen_api
 
@@ -17,6 +15,9 @@ def hello():
 @app.on_event("startup")
 async def startup_event():
     await db.connect()
+
+    # generate tables #
+    await fastgen_api.oFastgen_api.generate()
 
 @app.on_event("shutdown")
 async def shutdown_event():

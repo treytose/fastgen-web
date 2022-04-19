@@ -2,18 +2,18 @@ import { EColumn } from "../components/entity/EntityColumn";
 import { toTitle } from ".";
 
 export default function generateCode(entity: string, columns: EColumn[]) {
-    const pkName = `${entity}id`;
-    const libName = `o${toTitle(entity)}`;
-    const modelName = `${toTitle(entity)}Model`;
-    const className = toTitle(entity);
+  const pkName = `${entity}id`;
+  const libName = `o${toTitle(entity)}`;
+  const modelName = `${toTitle(entity)}Model`;
+  const className = toTitle(entity);
 
-    const mainCode = `
+  const mainCode = `
       from .routers import ${entity}
 
       app.include_router(${entity}.router)
     `;
 
-    const routerCode = `
+  const routerCode = `
       from fastapi import APIRouter
       from app.libraries.lib${entity} import ${className}
       from app.schemas.${entity} import ${modelName}
@@ -42,11 +42,17 @@ export default function generateCode(entity: string, columns: EColumn[]) {
           return await ${libName}.delete_${entity}(${pkName})
     `;
 
-    const libCode = `
+  const libCode = `
       from app.dependencies import db
       from app.schemas.${entity} import ${modelName}
 
       class ${className}:
+          async def generate(self):
+              await db.create_schema("${entity}", ${modelName}.schema())
+
+          async def get_${entity}_schema(self):
+              return ${modelName}.schema()
+
           async def get_${entity}_list(self, limit: int = 100):
               ${entity} = await db.fetchall("SELECT * FROM ${entity} LIMIT :limit", {"limit": limit})
               return ${entity}
@@ -68,21 +74,21 @@ export default function generateCode(entity: string, columns: EColumn[]) {
               return error_no
     `;
 
-    const typeMap = {
-        INT: "int",
-        FLOAT: "float",
-        VARCHAR: "str",
-        DATETIME: "datetime.datetime",
-    };
+  const typeMap = {
+    INT: "int",
+    FLOAT: "float",
+    VARCHAR: "str",
+    DATETIME: "datetime.datetime",
+  };
 
-    const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
+  const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
 
-    const types = columns
-        .filter((c) => !c.pk)
-        .map((c) => `${c.name}: ${typeMap[c.type]}`)
-        .join(" \n          ");
+  const types = columns
+    .filter((c) => !c.pk)
+    .map((c) => `${c.name}: ${typeMap[c.type]}`)
+    .join(" \n          ");
 
-    const schemaCode = `
+  const schemaCode = `
       from pydantic import BaseModel
       from typing import Optional
       ${needsDatetimeImport ? "import datetime\n" : ""}
@@ -90,19 +96,19 @@ export default function generateCode(entity: string, columns: EColumn[]) {
           ${types}
     `;
 
-    const sqlCode = `
+  const sqlCode = `
       CREATE TABLE IF NOT EXISTS ${entity} (
         ${columns
-            .map((c) =>
-                c.pk
-                    ? `${c.name} INT PRIMARY KEY AUTO_INCREMENT`
-                    : `        ${c.name} ${c.type}${
-                          c.typeArg ? "(" + c.typeArg + ")" : ""
-                      }`
-            )
-            .join(",\n")}
+          .map((c) =>
+            c.pk
+              ? `${c.name} INT PRIMARY KEY AUTO_INCREMENT`
+              : `        ${c.name} ${c.type}${
+                  c.typeArg ? "(" + c.typeArg + ")" : ""
+                }`
+          )
+          .join(",\n")}
       );
     `;
 
-    return { mainCode, routerCode, libCode, schemaCode, sqlCode };
+  return { mainCode, routerCode, libCode, schemaCode, sqlCode };
 }

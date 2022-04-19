@@ -10,11 +10,11 @@ const darkTheme = createTheme({
   palette: {
     primary: {
       main: "rgb(0, 171, 85)", // Buttons, Radios Buttons, etc.
-      contrastText: "#FFFFFF",
+      contrastText: "#FFF",
     },
     secondary: {
       main: "#7ba3c5",
-      contrastText: "#FFF",
+      contrastText: "#8d8d8d",
     },
     background: {
       default: "rgb(22, 28, 36)",
@@ -25,11 +25,11 @@ const darkTheme = createTheme({
     },
     text: {
       primary: "#FFF",
-      secondary: "#FFF",
-      disabled: grey[200],
+      secondary: "#8d8d8d",
+      disabled: grey[800],
     },
     action: {
-      disabled: "#FFF",
+      disabled: "#8d8d8d",
       disabledBackground: "#000",
     },
   },

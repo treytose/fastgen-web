@@ -8,6 +8,10 @@ from .routers import customer
 
 app = FastAPI()
 
+@app.get("/hello")
+async def hello():
+    return "Hello World"
+
 # app events #
 @app.on_event("startup")
 async def startup_event():

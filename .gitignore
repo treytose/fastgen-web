@@ -62,4 +62,4 @@ archive.zip
 *~
 .*.sw?
 
-fast.db
+fastgen-api/app/data/fast.db
