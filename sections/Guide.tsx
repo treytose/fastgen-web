@@ -72,6 +72,17 @@ const Guide = () => {
           },
         ],
       },
+      {
+        name: "data",
+        description:
+          "(optional) contains a SQLite3 database file and/or misc. data files",
+        children: [
+          {
+            name: "database.db",
+            description: "Example Sqlite3 databse file",
+          },
+        ],
+      },
     ],
   };
 

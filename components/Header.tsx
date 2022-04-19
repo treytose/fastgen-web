@@ -1,16 +1,19 @@
-import * as React from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Menu from "@mui/material/Menu";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Image from "next/image";
 import logo from "../public/logo.png";
 import Link from "next/link";
+
+import AppContext from "../store/AppContext";
 
 type Page = {
   name: string;
@@ -35,6 +38,8 @@ const Header = () => {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   );
+
+  const appCtx = useContext(AppContext);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -117,6 +122,11 @@ const Header = () => {
               </Link>
             ))}
           </Box>
+          {appCtx.apiConnected ? (
+            <Chip variant="outlined" color="success" label="API Connected" />
+          ) : (
+            <Chip variant="outlined" color="error" label="API not Connected" />
+          )}
         </Toolbar>
       </Container>
     </AppBar>
