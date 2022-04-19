@@ -1,28 +1,39 @@
-import { FC, useRef, useState } from "react";
+import React, { FC, useRef, useState } from "react";
 import {
   TextField,
   Grid,
   Typography,
-  Tooltip,
   IconButton,
+  Tooltip,
   MenuItem,
   Select,
   FormControl,
+  FormGroup,
+  FormControlLabel,
   Stack,
   Checkbox,
-  ListItemText,
-  OutlinedInput,
+  Accordion,
+  Alert,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
+
+import { grey } from "@mui/material/colors";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import KeyIcon from "@mui/icons-material/Key";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { SelectChangeEvent } from "@mui/material/Select";
 
-export type DATATYPE = "VARCHAR" | "FLOAT" | "INT" | "DATETIME";
+export type DATATYPE = "VARCHAR" | "FLOAT" | "INT" | "DATETIME" | "BOOLEAN";
 
 export type EColumn = {
   name: string;
   type: DATATYPE;
-  optional: boolean;
+  title?: string;
+  description?: string;
+  defaultValue?: string;
+  optional?: boolean;
   typeArg?: string;
   pk?: boolean;
   fk?: string;
@@ -45,11 +56,29 @@ const EntityColumn: FC<Props> = ({
 }) => {
   const nameRef = useRef<HTMLInputElement>();
   const typeArgRef = useRef<HTMLInputElement>();
-  const [options, setOptions] = useState<string[]>([]);
 
-  const handleNameUpdate = () => {
-    const name = !!nameRef.current ? nameRef.current.value : "";
+  const handleNameUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.value;
     onUpdate(index, { ...ecolumn, name });
+  };
+
+  const handleTitleUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const title = event.target.value;
+    onUpdate(index, { ...ecolumn, title });
+  };
+
+  const handleDescriptionUpdate = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const description = event.target.value;
+    onUpdate(index, { ...ecolumn, description });
+  };
+
+  const handleDefaultValueUpdate = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const defaultValue = event.target.value;
+    onUpdate(index, { ...ecolumn, defaultValue });
   };
 
   const handleTypeUpdate = (event: SelectChangeEvent) => {
@@ -65,115 +94,143 @@ const EntityColumn: FC<Props> = ({
     onUpdate(index, { ...ecolumn, typeArg: typeArg });
   };
 
-  const handleOptionUpdate = (event: SelectChangeEvent<typeof options>) => {
-    const opts =
-      typeof event.target.value === "string"
-        ? event.target.value.split(",")
-        : event.target.value;
-
-    setOptions(opts);
-
-    let optionArgs = {
-      optional: opts.includes("optional"),
-    };
-
-    ecolumn.optional = options.includes("optional");
-    onUpdate(index, { ...ecolumn, ...optionArgs });
+  const handleOptionalUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const optional = event.target.checked;
+    onUpdate(index, { ...ecolumn, optional });
   };
 
-  return (
-    <Grid container spacing={1} alignItems="center">
-      <Grid item xs={4}>
-        {allowEdit ? (
-          <TextField
-            variant="standard"
-            defaultValue={ecolumn.name}
-            placeholder="Column name"
-            inputRef={nameRef}
-            onBlur={handleNameUpdate}
-          />
-        ) : (
-          <Typography> {ecolumn.name} </Typography>
-        )}
-      </Grid>
-      <Grid item xs={4}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={8}>
-            {allowEdit ? (
-              <FormControl variant="standard" fullWidth>
-                <Select
-                  defaultValue={!!ecolumn.type ? ecolumn.type : "VARCHAR"}
-                  onChange={handleTypeUpdate}
-                >
-                  <MenuItem value="INT"> INT </MenuItem>
-                  <MenuItem value="VARCHAR"> VARCHAR </MenuItem>
-                  <MenuItem value="FLOAT"> FLOAT </MenuItem>
-                  <MenuItem value="DATETIME"> DATETIME </MenuItem>
-                </Select>
-              </FormControl>
-            ) : (
-              <Typography> {ecolumn.type.toUpperCase()} </Typography>
-            )}
+  return !allowEdit ? (
+    <Accordion>
+      <AccordionSummary>
+        <Grid container>
+          <Grid item xs={6}>
+            <Typography>{ecolumn.name}</Typography>
           </Grid>
-          <Grid xs={4}>
-            {["VARCHAR", "INT"].includes(ecolumn.type) && !ecolumn.pk && (
-              <Stack direction="row" sx={{ marginTop: "7px" }}>
-                <Typography>(</Typography>
-                <TextField
-                  InputProps={{
-                    inputProps: { style: { textAlign: "center" } },
-                  }}
-                  inputRef={typeArgRef}
-                  variant="standard"
-                  defaultValue={"64"}
-                  onBlur={handleTypArgUpdate}
-                />
-                <Typography>)</Typography>
-              </Stack>
+          <Grid item xs={6}>
+            {ecolumn.pk && (
+              <Tooltip title="Primary Key" placement="top">
+                <KeyIcon color="primary" />
+              </Tooltip>
             )}
           </Grid>
         </Grid>
-      </Grid>
-      <Grid item xs={3} justifyContent="center" sx={{ textAlign: "center" }}>
-        {ecolumn.pk ? (
-          <Tooltip title="Primary Key" placement="top">
-            <KeyIcon color="primary" />
-          </Tooltip>
-        ) : (
-          <FormControl variant="standard" size="small" fullWidth>
-            <Select
-              multiple
-              displayEmpty
-              onChange={handleOptionUpdate}
-              value={options}
-              renderValue={(selected: string[]) => {
-                if (selected.length === 0) {
-                  return <em>Options</em>;
-                }
-                return selected.join(", ");
-              }}
-            >
-              <MenuItem disabled value="">
-                <em>Options</em>
-              </MenuItem>
-              <MenuItem value="optional">
-                <Checkbox checked={options.includes("optional")} />
-                <ListItemText primary="Optional" />
-              </MenuItem>
-            </Select>
-          </FormControl>
-        )}
-      </Grid>
-      <Grid item xs={1}>
-        {allowEdit && (
-          <Tooltip title="Delete Column" placement="top">
-            <IconButton onClick={(e) => onDelete(index)}>
-              <DeleteIcon color="secondary" />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Grid>
-    </Grid>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Alert severity="info"> PRIMARY KEY - Cannot Edit</Alert>
+      </AccordionDetails>
+    </Accordion>
+  ) : (
+    <Accordion sx={{ backgroundColor: grey[800] }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon color="primary" />}>
+        <TextField
+          placeholder="Enter column name"
+          defaultValue={ecolumn.name}
+          variant="standard"
+          inputRef={nameRef}
+          onBlur={handleNameUpdate}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </AccordionSummary>
+      <AccordionDetails sx={{ padding: "1rem 3rem" }}>
+        <Grid container spacing={3}>
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              TITLE:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <TextField
+              variant="standard"
+              fullWidth
+              onBlur={handleTitleUpdate}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              DESCRIPTION:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <TextField
+              variant="standard"
+              fullWidth
+              onBlur={handleDescriptionUpdate}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              DEFAULT:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <TextField
+              variant="standard"
+              fullWidth
+              onBlur={handleDefaultValueUpdate}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              TYPE:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <Grid container spacing={2}>
+              <Grid item xs={8}>
+                <FormControl variant="standard" fullWidth>
+                  <Select defaultValue={"VARCHAR"} onChange={handleTypeUpdate}>
+                    <MenuItem value="INT"> INT </MenuItem>
+                    <MenuItem value="VARCHAR"> VARCHAR </MenuItem>
+                    <MenuItem value="FLOAT"> FLOAT </MenuItem>
+                    <MenuItem value="DATETIME"> DATETIME </MenuItem>
+                    <MenuItem value="BOOLEAN"> BOOLEAN </MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={4}>
+                {["VARCHAR", "INT"].includes(ecolumn.type) && !ecolumn.pk && (
+                  <Stack direction="row">
+                    <Typography>(</Typography>
+                    <TextField
+                      InputProps={{
+                        inputProps: { style: { textAlign: "center" } },
+                      }}
+                      inputRef={typeArgRef}
+                      variant="standard"
+                      defaultValue={"64"}
+                      onBlur={handleTypArgUpdate}
+                    />
+                    <Typography>)</Typography>
+                  </Stack>
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              OPTIONS:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <Stack direction="row">
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox onChange={handleOptionalUpdate} />}
+                  label="Optional"
+                />
+              </FormGroup>
+            </Stack>
+          </Grid>
+          <Grid item xs={12} sx={{ textAlign: "right" }}>
+            <Tooltip title="Delete Column" placement="top">
+              <IconButton onClick={(e) => onDelete(index)}>
+                <DeleteIcon color="secondary" />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+        </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

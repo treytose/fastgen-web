@@ -21,6 +21,10 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       router = APIRouter()
       ${libName} = ${className}()
 
+      @router.get("/${entity}/schema")
+      async def get_${entity}_schema():
+        return await ${libName}.get_${entity}_schema()
+
       @router.get("/${entity}")
       async def get_${entity}_list(limit: int = 100):            
           return await ${libName}.get_${entity}_list(limit)
@@ -79,23 +83,48 @@ export default function generateCode(entity: string, columns: EColumn[]) {
     FLOAT: "float",
     VARCHAR: "str",
     DATETIME: "datetime.datetime",
+    BOOLEAN: "bool",
   };
 
   const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
+  const formatDefault = (c: EColumn, isSql = false) => {
+    if (!c.defaultValue) {
+      return "None";
+    }
+
+    if (c.type === "VARCHAR") {
+      return `'${c.defaultValue}'`;
+    }
+
+    if (c.type === "BOOLEAN" && !isSql) {
+      return c.type === "false" ? "False" : "True";
+    }
+
+    return c.defaultValue;
+  };
 
   const types = columns
     .filter((c) => !c.pk)
     .map((c) => {
       if (c.optional) {
-        return `${c.name}: Optional[${typeMap[c.type]}] = None`;
+        return `${c.name}: Optional[${typeMap[c.type]}] = Query(${formatDefault(
+          c
+        )}, title="${c.title || c.name}", description="${
+          c.description || ""
+        }")`;
       } else {
-        return `${c.name}: ${typeMap[c.type]}`;
+        return `${c.name}: ${typeMap[c.type]} = Query(${formatDefault(
+          c
+        )}, title="${c.title || c.name}", description="${
+          c.description || ""
+        }")`;
       }
     })
     .join(" \n          ");
 
   const schemaCode = `
       from pydantic import BaseModel
+      from fastapi import Query
       from typing import Optional
       ${needsDatetimeImport ? "import datetime\n" : ""}
       class ${modelName}(BaseModel):          
@@ -110,6 +139,8 @@ export default function generateCode(entity: string, columns: EColumn[]) {
               ? `${c.name} INT PRIMARY KEY AUTO_INCREMENT`
               : `        ${c.name} ${c.type}${
                   c.typeArg ? "(" + c.typeArg + ")" : ""
+                }${c.optional ? "" : " NOT NULL"}${
+                  c.defaultValue ? " DEFAULT " + formatDefault(c, true) : ""
                 }`
           )
           .join(",\n")}
