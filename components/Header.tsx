@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useContext } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -9,10 +9,10 @@ import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import Image from "next/image";
 import logo from "../public/logo.png";
 import Link from "next/link";
-
 import AppContext from "../store/AppContext";
 
 type Page = {
@@ -26,7 +26,7 @@ const pages: Page[] = [
     path: "/",
   },
   {
-    name: "Entity Generator",
+    name: "Create Entity",
     path: "/generate/entity",
   },
 ];
@@ -122,10 +122,30 @@ const Header = () => {
               </Link>
             ))}
           </Box>
+          {appCtx.apiName && (
+            <Chip
+              variant="outlined"
+              color="info"
+              label={`Configuring API: ${appCtx.apiName}`}
+              sx={{ marginRight: "1rem" }}
+            />
+          )}
+
           {appCtx.apiConnected ? (
-            <Chip variant="outlined" color="success" label="API Connected" />
+            <Tooltip title="Serverside features are enabled">
+              <Chip variant="outlined" color="success" label="API Connected" />
+            </Tooltip>
           ) : (
-            <Chip variant="outlined" color="error" label="API not Connected" />
+            <Tooltip title="Enable the Fastgen-api on your server to unlock serverside features">
+              <Box onClick={() => appCtx.checkApi()}>
+                <Chip
+                  variant="outlined"
+                  color="error"
+                  label="API not Connected"
+                  clickable={true}
+                />
+              </Box>
+            </Tooltip>
           )}
         </Toolbar>
       </Container>

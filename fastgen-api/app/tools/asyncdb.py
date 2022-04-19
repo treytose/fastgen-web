@@ -32,7 +32,7 @@ class AsyncDB:
             if not DB_NAME:
                 raise Exception("Missing required environment variable: DB_NAME")
                 
-            self.db = Database("sqlite:////app/data/%s" % (
+            self.db = Database("sqlite:///app/data/%s" % (
                 DB_NAME
             ))
 

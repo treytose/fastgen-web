@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Typography, Grid, TextField, Stack, Button } from "@mui/material";
+import { Typography, Grid, TextField, Stack, Button, Box } from "@mui/material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 
 // components
@@ -73,20 +73,50 @@ const Entity = () => {
         setSqlCode(sqlCode);
     }, [entity, columns]);
 
-    const RenderStep = (
-        title: string,
-        code: string,
-        language: string = "Python"
-    ) => {
+    type Step = {
+        title: string;
+        code: string;
+        language: string;
+    };
+
+    const RenderStep = (step: Step, key: number) => {
         return (
-            <>
+            <Box key={key}>
                 <Typography variant="h6" color="primary">
-                    {title}
+                    {step.title}
                 </Typography>
-                <Code code={code} language={language} />
-            </>
+                <Code code={step.code} language={step.language} />
+            </Box>
         );
     };
+
+    const steps: Step[] = [
+        {
+            title: "Register : Add to app/main.py",
+            code: mainCode,
+            language: "python",
+        },
+        {
+            title: `Router : Create app/routers/${entity}.py`,
+            code: routerCode,
+            language: "python",
+        },
+        {
+            title: `Library : Create app/libraries/lib${entity}.py`,
+            code: libCode,
+            language: "python",
+        },
+        {
+            title: `Schema : Create to app/schemas/${entity}.py`,
+            code: schemaCode,
+            language: "python",
+        },
+        {
+            title: `SQL : Create Table`,
+            code: sqlCode,
+            language: "SQL",
+        },
+    ];
 
     return (
         <>
@@ -134,35 +164,7 @@ const Entity = () => {
                 </Grid>
                 <Grid item xs={7}>
                     <ColumnCard title="Output">
-                        {entity && (
-                            <>
-                                {RenderStep(
-                                    `Register : Add to app/main.py`,
-                                    mainCode
-                                )}
-                                <br />
-                                {RenderStep(
-                                    `Router : Create app/routers/${entity}.py`,
-                                    routerCode
-                                )}
-                                <br />
-                                {RenderStep(
-                                    `Library : Create app/libraries/lib${entity}.py`,
-                                    libCode
-                                )}
-                                <br />
-                                {RenderStep(
-                                    `Schema : Create to app/schemas/${entity}.py`,
-                                    schemaCode
-                                )}
-                                <br />
-                                {RenderStep(
-                                    `SQL : Create Table`,
-                                    sqlCode,
-                                    "SQL"
-                                )}
-                            </>
-                        )}
+                        {entity && steps.map((step, i) => RenderStep(step, i))}
                     </ColumnCard>
                 </Grid>
             </Grid>

@@ -25,7 +25,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       async def get_${entity}_list(limit: int = 100):            
           return await ${libName}.get_${entity}_list(limit)
 
-      @router.get("/${entity}/${pkName}")
+      @router.get("/${entity}/{${pkName}}")
       async def get_${entity}(${pkName}: int):
           return await ${libName}.get_${entity}(${pkName})
 
@@ -33,11 +33,11 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       async def create_${entity}(${entity}: ${modelName}):
           return await ${libName}.create_${entity}(${entity}.dict())
 
-      @router.put("/${entity}/${pkName}")
+      @router.put("/${entity}/{${pkName}}")
       async def update_${entity}(${pkName}: int, ${entity}: ${modelName}):
           return await ${libName}.update_${entity}(${pkName}, ${entity}.dict())
 
-      @router.delete("/${entity}/${pkName}")
+      @router.delete("/${entity}/{${pkName}}")
       async def delete_${entity}(${pkName}: int):
           return await ${libName}.delete_${entity}(${pkName})
     `;

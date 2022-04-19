@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class GeneratorModel(BaseModel):          
+class Fastgen_apiModel(BaseModel):          
     name: str 
     path: str

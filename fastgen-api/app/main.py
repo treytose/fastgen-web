@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from .dependencies import db
 # routers 
+from .routers import fastgen_api
 
 app = FastAPI()
 
@@ -22,5 +23,6 @@ async def shutdown_event():
     await db.disconnect()
 
 # register routers #
+app.include_router(fastgen_api.router)
 
 

@@ -61,3 +61,5 @@ archive.zip
 # vim temporary files
 *~
 .*.sw?
+
+fast.db

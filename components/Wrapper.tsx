@@ -2,22 +2,17 @@ import React, { FC, useContext, useEffect, useState } from "react";
 import { ThemeProvider, Container, Box } from "@mui/material";
 
 import SettingsContext from "../store/SettingsContext";
+import AppContext from "../store/AppContext";
 import PageLoading from "./PageLoading";
 import Header from "./Header";
 
 const Wrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
   const settingsCtx = useContext(SettingsContext);
-  const [pageLoaded, setPageLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!pageLoaded) {
-      setPageLoaded(true);
-    }
-  }, [pageLoaded]);
+  const appCtx = useContext(AppContext);
 
   return (
     <>
-      {pageLoaded ? (
+      {appCtx.pageLoaded ? (
         <ThemeProvider theme={settingsCtx.theme.theme}>
           <Container maxWidth={false} disableGutters>
             <Header />
