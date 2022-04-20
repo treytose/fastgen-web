@@ -43,7 +43,7 @@ const Config = () => {
                     <ColumnCard title="Select an API to Configure">
                         <List>
                             {apiList.map((api) => (
-                                <ListItem>
+                                <ListItem key={api}>
                                     <ListItemButton
                                         selected={appCtx.apiName === api}
                                         onClick={(e) => onApiSelected(api)}
