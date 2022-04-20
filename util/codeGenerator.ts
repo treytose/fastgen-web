@@ -2,18 +2,18 @@ import { EColumn } from "../components/entity/EntityColumn";
 import { toTitle } from ".";
 
 export default function generateCode(entity: string, columns: EColumn[]) {
-  const pkName = `${entity}id`;
-  const libName = `o${toTitle(entity)}`;
-  const modelName = `${toTitle(entity)}Model`;
-  const className = toTitle(entity);
+    const pkName = `${entity}id`;
+    const libName = `o${toTitle(entity)}`;
+    const modelName = `${toTitle(entity)}Model`;
+    const className = toTitle(entity);
 
-  const mainCode = `
+    const mainCode = `
       from .routers import ${entity}
 
       app.include_router(${entity}.router)
     `;
 
-  const routerCode = `
+    const routerCode = `
       from fastapi import APIRouter
       from app.libraries.lib${entity} import ${className}
       from app.schemas.${entity} import ${modelName}
@@ -46,7 +46,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
           return await ${libName}.delete_${entity}(${pkName})
     `;
 
-  const libCode = `
+    const libCode = `
       from app.dependencies import db
       from app.schemas.${entity} import ${modelName}
 
@@ -78,51 +78,51 @@ export default function generateCode(entity: string, columns: EColumn[]) {
               return error_no
     `;
 
-  const typeMap = {
-    INT: "int",
-    FLOAT: "float",
-    VARCHAR: "str",
-    DATETIME: "datetime.datetime",
-    BOOLEAN: "bool",
-  };
+    const typeMap = {
+        INT: "int",
+        FLOAT: "float",
+        VARCHAR: "str",
+        DATETIME: "datetime.datetime",
+        BOOLEAN: "bool",
+    };
 
-  const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
-  const formatDefault = (c: EColumn, isSql = false) => {
-    if (!c.defaultValue) {
-      return "None";
-    }
+    const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
+    const formatDefault = (c: EColumn, isSql = false) => {
+        if (!c.defaultValue) {
+            return "None";
+        }
 
-    if (c.type === "VARCHAR") {
-      return `'${c.defaultValue}'`;
-    }
+        if (c.type === "VARCHAR") {
+            return `'${c.defaultValue}'`;
+        }
 
-    if (c.type === "BOOLEAN" && !isSql) {
-      return c.type === "false" ? "False" : "True";
-    }
+        if (c.type === "BOOLEAN" && !isSql) {
+            return c.defaultValue === "false" ? "False" : "True";
+        }
 
-    return c.defaultValue;
-  };
+        return c.defaultValue;
+    };
 
-  const types = columns
-    .filter((c) => !c.pk)
-    .map((c) => {
-      if (c.optional) {
-        return `${c.name}: Optional[${typeMap[c.type]}] = Query(${formatDefault(
-          c
-        )}, title="${c.title || c.name}", description="${
-          c.description || ""
-        }")`;
-      } else {
-        return `${c.name}: ${typeMap[c.type]} = Query(${formatDefault(
-          c
-        )}, title="${c.title || c.name}", description="${
-          c.description || ""
-        }")`;
-      }
-    })
-    .join(" \n          ");
+    const types = columns
+        .filter((c) => !c.pk)
+        .map((c) => {
+            if (c.optional) {
+                return `${c.name}: Optional[${
+                    typeMap[c.type]
+                }] = Query(${formatDefault(c)}, title="${
+                    c.title || c.name
+                }", description="${c.description || ""}", optional=true)`;
+            } else {
+                return `${c.name}: ${typeMap[c.type]} = Query(${formatDefault(
+                    c
+                )}, title="${c.title || c.name}", description="${
+                    c.description || ""
+                }")`;
+            }
+        })
+        .join(" \n          ");
 
-  const schemaCode = `
+    const schemaCode = `
       from pydantic import BaseModel
       from fastapi import Query
       from typing import Optional
@@ -131,21 +131,23 @@ export default function generateCode(entity: string, columns: EColumn[]) {
           ${types}
     `;
 
-  const sqlCode = `
+    const sqlCode = `
       CREATE TABLE IF NOT EXISTS ${entity} (
         ${columns
-          .map((c) =>
-            c.pk
-              ? `${c.name} INT PRIMARY KEY AUTO_INCREMENT`
-              : `        ${c.name} ${c.type}${
-                  c.typeArg ? "(" + c.typeArg + ")" : ""
-                }${c.optional ? "" : " NOT NULL"}${
-                  c.defaultValue ? " DEFAULT " + formatDefault(c, true) : ""
-                }`
-          )
-          .join(",\n")}
+            .map((c) =>
+                c.pk
+                    ? `${c.name} INT PRIMARY KEY AUTO_INCREMENT`
+                    : `        ${c.name} ${c.type}${
+                          c.typeArg ? "(" + c.typeArg + ")" : ""
+                      }${c.optional ? "" : " NOT NULL"}${
+                          c.defaultValue
+                              ? " DEFAULT " + formatDefault(c, true)
+                              : ""
+                      }`
+            )
+            .join(",\n")}
       );
     `;
 
-  return { mainCode, routerCode, libCode, schemaCode, sqlCode };
+    return { mainCode, routerCode, libCode, schemaCode, sqlCode };
 }
