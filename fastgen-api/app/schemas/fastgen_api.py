@@ -9,4 +9,4 @@ class Fastgen_apiModel(BaseModel):
     dbType: Optional[str] = Query('sqlite', title="Database Type", description="The database type to use", optional=True) 
     dbName: Optional[str] = Query('fast.db', title="Database Name", description="The name of the database or file", optional=True) 
     dbUser: Optional[str] = Query(None, title="Database User", description="The database user", optional=True) 
-    dbPass: Optional[str] = Query(None, title="Database Password", description="The database password", optional=True)
+    dbPass: Optional[str] = Query(None, title="Database Password", description="The database password", optional=True, hideOnForm=True)

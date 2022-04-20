@@ -111,13 +111,15 @@ export default function generateCode(entity: string, columns: EColumn[]) {
                     typeMap[c.type]
                 }] = Query(${formatDefault(c)}, title="${
                     c.title || c.name
-                }", description="${c.description || ""}", optional=true)`;
+                }", description="${c.description || ""}", optional=true ${
+                    c.hideOnForm ? ", hideOnForm=True" : ""
+                })`;
             } else {
                 return `${c.name}: ${typeMap[c.type]} = Query(${formatDefault(
                     c
                 )}, title="${c.title || c.name}", description="${
                     c.description || ""
-                }")`;
+                }"${c.hideOnForm ? ", hideOnForm=True" : ""})`;
             }
         })
         .join(" \n          ");

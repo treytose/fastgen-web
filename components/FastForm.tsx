@@ -42,16 +42,18 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
         let props: Property[] = [];
         Object.keys(resp.data.properties).forEach((key, index) => {
           let value = resp.data.properties[key];
-          props.push({
-            index,
-            name: key,
-            title: value.title,
-            type: value.type,
-            default: value.default,
-            value: value.default,
-            description: value.description,
-            optional: !!value.optional,
-          });
+          if (!value.hideOnForm) {
+            props.push({
+              index,
+              name: key,
+              title: value.title,
+              type: value.type,
+              default: value.default,
+              value: value.default,
+              description: value.description,
+              optional: !!value.optional,
+            });
+          }
         });
 
         setProperties(props);

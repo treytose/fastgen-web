@@ -34,6 +34,7 @@ export type EColumn = {
   description?: string;
   defaultValue?: string;
   optional?: boolean;
+  hideOnForm?: boolean;
   typeArg?: string;
   pk?: boolean;
   fk?: string;
@@ -97,6 +98,11 @@ const EntityColumn: FC<Props> = ({
   const handleOptionalUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
     const optional = event.target.checked;
     onUpdate(index, { ...ecolumn, optional });
+  };
+
+  const handleHideFormUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    onUpdate(index, { ...ecolumn, hideOnForm: checked });
   };
 
   return !allowEdit ? (
@@ -217,6 +223,12 @@ const EntityColumn: FC<Props> = ({
                 <FormControlLabel
                   control={<Checkbox onChange={handleOptionalUpdate} />}
                   label="Optional"
+                />
+              </FormGroup>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox onChange={handleHideFormUpdate} />}
+                  label="Hide on Form"
                 />
               </FormGroup>
             </Stack>
