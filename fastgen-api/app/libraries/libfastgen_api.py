@@ -39,6 +39,19 @@ class Fastgen_api:
         subprocess.run("venv/bin/pip install --upgrade pip", shell=True, check=True)
         subprocess.run("venv/bin/pip install -r requirements.txt", shell=True, check=True)
 
+        with open(os.path.join(fastgen_api.path, fastgen_api.name, ".env"), "w") as f:
+            if fastgen_api.dbType:
+                f.write(f'DB_TYPE="{fastgen_api.dbType}"\n')                
+
+            if fastgen_api.dbHost:
+                f.write(f'DB_HOST="{fastgen_api.dbHost}"\n')                                
+
+            if fastgen_api.dbName:
+                f.write(f'DB_NAME="{fastgen_api.dbName}"\n') 
+
+            if fastgen_api.dbPass:
+                f.write(f'DB_PASS="{fastgen_api.dbPass}"\n')                                                                                
+
         os.chdir(owd)
 
         fastgen_apiid = await db.insert("fastgen_api", fastgen_api.dict())
@@ -51,3 +64,6 @@ class Fastgen_api:
     async def delete_fastgen_api(self, fastgen_apiid: int):
         error_no = await db.delete("fastgen_api", "fastgen_apiid", fastgen_apiid)
         return error_no
+
+    async def inject_entity(self, entity):
+        pass

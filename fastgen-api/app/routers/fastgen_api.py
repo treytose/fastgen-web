@@ -25,6 +25,12 @@ async def create_fastgen_api(fastgen_api: Fastgen_apiModel):
 async def update_fastgen_api(fastgen_apiid: int, fastgen_api: Fastgen_apiModel):
     return await oFastgen_api.update_fastgen_api(fastgen_apiid, fastgen_api.dict())
 
-@router.delete("/fastgen_api/fastgen_apiid")
+@router.delete("/fastgen_api/{fastgen_apiid}")
 async def delete_fastgen_api(fastgen_apiid: int):
     return await oFastgen_api.delete_fastgen_api(fastgen_apiid)
+
+
+#### Other ####
+@router.post("/fastgen_api/{fastgen_apiid}/inject")
+async def inject_entity():
+    pass

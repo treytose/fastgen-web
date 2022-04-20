@@ -7,6 +7,9 @@ import {
   Button,
   Grid,
   Alert,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 
 import { useRouter } from "next/router";
@@ -25,6 +28,7 @@ type Property = {
   default?: string;
   description?: string;
   optional?: boolean;
+  allowed_values: string[] | number[];
 };
 
 const FastForm: FC<FastFormProps> = ({ entity }) => {
@@ -38,7 +42,6 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
     axios
       .get(`/api/${entity}/schema`)
       .then((resp) => {
-        console.log(resp);
         let props: Property[] = [];
         Object.keys(resp.data.properties).forEach((key, index) => {
           let value = resp.data.properties[key];
@@ -46,12 +49,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
             props.push({
               index,
               name: key,
-              title: value.title,
-              type: value.type,
-              default: value.default,
-              value: value.default,
-              description: value.description,
-              optional: !!value.optional,
+              ...value,
             });
           }
         });
@@ -60,7 +58,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
         setLoading(false);
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
         setLoading(false);
       });
   }, []);
@@ -83,7 +81,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
         router.push("/config");
       })
       .catch((err: AxiosError) => {
-        console.log(err);
+        console.error(err);
         setLoading(false);
         setError(err.message);
       });
@@ -97,6 +95,29 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
   };
 
   const RenderProperty = (property: Property) => {
+    if (property.allowed_values && property.allowed_values.length > 0) {
+      return (
+        <FormControl variant="standard" fullWidth>
+          <InputLabel>{property.title}</InputLabel>
+          <Select
+            label={property.title}
+            value={
+              property.value || property.default || property.allowed_values[0]
+            }
+            onChange={(e) => {
+              handlePropertyUpdate(property.index, e.target.value);
+            }}
+          >
+            {property.allowed_values.map((v, i) => (
+              <MenuItem value={v} key={i}>
+                {v}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      );
+    }
+
     switch (property.type) {
       case "string":
         return (
@@ -104,7 +125,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
             variant="standard"
             label={property.title}
             name={property.name}
-            value={property.value || ""}
+            value={property.value || property.default || ""}
             fullWidth
             required={!property.optional}
             onChange={(e) =>
@@ -121,7 +142,11 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
         <Typography> Loading </Typography>
       ) : (
         <>
-          {error && <Alert severity="error"> {error} </Alert>}
+          {error && (
+            <Alert sx={{ marginBottom: "1rem" }} severity="error">
+              {error}
+            </Alert>
+          )}
           <form onSubmit={handleSubmit}>
             <FormControl>
               <Grid container spacing={2}>

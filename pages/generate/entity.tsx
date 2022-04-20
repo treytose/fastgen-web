@@ -1,5 +1,13 @@
-import { useRef, useState, useEffect } from "react";
-import { Typography, Grid, TextField, Stack, Button, Box } from "@mui/material";
+import { useRef, useState, useEffect, useContext } from "react";
+import {
+  Typography,
+  Grid,
+  TextField,
+  Stack,
+  Button,
+  Box,
+  Tooltip,
+} from "@mui/material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 
 // components
@@ -7,9 +15,11 @@ import ColumnCard from "../../components/ColumnCard";
 import Code from "../../components/Code";
 import EntityColumn, { EColumn } from "../../components/entity/EntityColumn";
 
+import AppContext from "../../store/AppContext";
 import generateCode from "../../util/codeGenerator";
 
 const Entity = () => {
+  const appCtx = useContext(AppContext);
   const entityRef = useRef<HTMLInputElement>(null);
   const [entity, setEntity] = useState<string>("");
   const [mainCode, setMainCode] = useState<string>("");
@@ -172,7 +182,22 @@ const Entity = () => {
           <ColumnCard>
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography variant="h5"> Output </Typography>
-              <Button variant="contained"> Inject into API </Button>
+              {entity && (
+                <Tooltip
+                  title={
+                    appCtx.api
+                      ? `Injext into ${appCtx.api.name}`
+                      : `Connect to an API in order to inject this code`
+                  }
+                >
+                  <Button
+                    variant="contained"
+                    color={appCtx.api ? "success" : "error"}
+                  >
+                    Inject into API
+                  </Button>
+                </Tooltip>
+              )}
             </Box>
             {entity && steps.map((step, i) => RenderStep(step, i))}
           </ColumnCard>
