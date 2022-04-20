@@ -122,11 +122,11 @@ const Header = () => {
               </Link>
             ))}
           </Box>
-          {appCtx.apiName && (
+          {appCtx.api && (
             <Chip
               variant="outlined"
               color="info"
-              label={`Configuring API: ${appCtx.apiName}`}
+              label={`Configuring API: ${appCtx.api.name}`}
               sx={{ marginRight: "1rem" }}
             />
           )}

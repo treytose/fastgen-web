@@ -42,7 +42,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
         let props: Property[] = [];
         Object.keys(resp.data.properties).forEach((key, index) => {
           let value = resp.data.properties[key];
-          if (!value.hideOnForm) {
+          if (!value.hide_on_form) {
             props.push({
               index,
               name: key,
@@ -80,8 +80,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
       .then((resp) => {
         setLoading(false);
         setError("");
-        appCtx.setApiName(body.name);
-        router.push("/");
+        router.push("/config");
       })
       .catch((err: AxiosError) => {
         console.log(err);

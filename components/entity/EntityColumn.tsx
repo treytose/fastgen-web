@@ -18,8 +18,6 @@ import {
   AccordionDetails,
 } from "@mui/material";
 
-import { grey } from "@mui/material/colors";
-
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import KeyIcon from "@mui/icons-material/Key";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,6 +36,7 @@ export type EColumn = {
   typeArg?: string;
   pk?: boolean;
   fk?: string;
+  allowedValues?: string[] | number[];
 };
 
 type Props = {
@@ -55,8 +54,9 @@ const EntityColumn: FC<Props> = ({
   allowEdit,
   index,
 }) => {
-  const nameRef = useRef<HTMLInputElement>();
   const typeArgRef = useRef<HTMLInputElement>();
+  const [allowedValueToggle, setAllowedValueToggle] = useState<boolean>(false);
+  const [allowedValues, setAllowedValues] = useState<string[] | number[]>([]);
 
   const handleNameUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
     const name = event.target.value;
@@ -105,6 +105,23 @@ const EntityColumn: FC<Props> = ({
     onUpdate(index, { ...ecolumn, hideOnForm: checked });
   };
 
+  const handleAllowedValueToggleUpdate = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const checked = event.target.checked;
+    setAllowedValueToggle(checked);
+    onUpdate(index, { ...ecolumn, allowedValues: null });
+  };
+
+  const handleAllowedValuesUpdate = (
+    event: React.FocusEvent<HTMLInputElement>
+  ) => {
+    onUpdate(index, {
+      ...ecolumn,
+      allowedValues: event.target.value.split(","),
+    });
+  };
+
   return !allowEdit ? (
     <Accordion>
       <AccordionSummary>
@@ -132,7 +149,6 @@ const EntityColumn: FC<Props> = ({
           placeholder="Enter column name"
           defaultValue={ecolumn.name}
           variant="standard"
-          inputRef={nameRef}
           onBlur={handleNameUpdate}
           onClick={(e) => e.stopPropagation()}
         />
@@ -231,8 +247,33 @@ const EntityColumn: FC<Props> = ({
                   label="Hide on Form"
                 />
               </FormGroup>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox onChange={handleAllowedValueToggleUpdate} />
+                  }
+                  label="Limit Values"
+                />
+              </FormGroup>
             </Stack>
           </Grid>
+          {allowedValueToggle && (
+            <>
+              <Grid item xs={3}>
+                <Typography variant="h6" sx={{ color: "primary.main" }}>
+                  ALLOWED VALUES:
+                </Typography>
+              </Grid>
+              <Grid item xs={9}>
+                <TextField
+                  variant="standard"
+                  placeholder="Enter SQL or comma separated list of values"
+                  fullWidth
+                  onBlur={handleAllowedValuesUpdate}
+                />
+              </Grid>
+            </>
+          )}
           <Grid item xs={12} sx={{ textAlign: "right" }}>
             <Tooltip title="Delete Column" placement="top">
               <IconButton onClick={(e) => onDelete(index)}>
