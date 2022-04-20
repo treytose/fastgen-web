@@ -7,7 +7,9 @@ import {
   Button,
   Box,
   Tooltip,
+  Alert,
 } from "@mui/material";
+import axios, { AxiosError } from "axios";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 
 // components
@@ -20,6 +22,9 @@ import generateCode from "../../util/codeGenerator";
 
 const Entity = () => {
   const appCtx = useContext(AppContext);
+  const [error, setError] = useState<string>("");
+  const [notification, setNotification] = useState<string>("");
+
   const entityRef = useRef<HTMLInputElement>(null);
   const [entity, setEntity] = useState<string>("");
   const [mainCode, setMainCode] = useState<string>("");
@@ -80,6 +85,37 @@ const Entity = () => {
       };
       return [...columns];
     });
+  };
+
+  const handleInject = () => {
+    if (!appCtx.api) {
+      return;
+    }
+    console.log(appCtx.api);
+
+    const { mainCode, routerCode, libCode, schemaCode, sqlCode } = generateCode(
+      entity,
+      columns
+    );
+
+    axios
+      .post(`/api/fastgen_api/${appCtx.api.fastgen_apiid}/inject`, {
+        name: entity,
+        router_code: routerCode,
+        main_code: mainCode,
+        lib_code: libCode,
+        schema_code: schemaCode,
+      })
+      .then((resp) => {
+        console.log(resp);
+        setError("");
+        setNotification(`${entity} Injected successfully`);
+      })
+      .catch((error: AxiosError) => {
+        console.log(error);
+        setNotification("");
+        setError(error.message);
+      });
   };
 
   useEffect(() => {
@@ -180,19 +216,31 @@ const Entity = () => {
         </Grid>
         <Grid item xs={7}>
           <ColumnCard>
+            {error && (
+              <Alert sx={{ marginBottom: "1rem" }} severity="error">
+                {error}
+              </Alert>
+            )}
+
+            {notification && (
+              <Alert sx={{ marginBottom: "1rem" }} severity="success">
+                {notification}
+              </Alert>
+            )}
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography variant="h5"> Output </Typography>
               {entity && (
                 <Tooltip
                   title={
                     appCtx.api
-                      ? `Injext into ${appCtx.api.name}`
+                      ? `Inject into ${appCtx.api.name}`
                       : `Connect to an API in order to inject this code`
                   }
                 >
                   <Button
                     variant="contained"
                     color={appCtx.api ? "success" : "error"}
+                    onClick={handleInject}
                   >
                     Inject into API
                   </Button>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.libraries.libfastgen_api import Fastgen_api
-from app.schemas.fastgen_api import Fastgen_apiModel
+from app.schemas.fastgen_api import Fastgen_apiModel, EntityModel
 
 router = APIRouter()
 oFastgen_api = Fastgen_api()
@@ -32,5 +32,5 @@ async def delete_fastgen_api(fastgen_apiid: int):
 
 #### Other ####
 @router.post("/fastgen_api/{fastgen_apiid}/inject")
-async def inject_entity():
-    pass
+async def inject_entity(fastgen_apiid: int, entity: EntityModel):
+    return await oFastgen_api.inject_entity(fastgen_apiid, entity)    

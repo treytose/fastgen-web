@@ -76,29 +76,20 @@ class AsyncDB:
         error_no = await self.db.execute(
             query=f'''
                 DELETE FROM {table}
-                WHERE :{key_column}=:{key_column}_value
+                WHERE {key_column}=:{key_column}_value
             ''',
-            values={key_column: key_column, f"{key_column}_value": key_value}
+            values={f"{key_column}_value": key_value}
         )
         return error_no
 
 
-    ''' {'title': 'Fastgen_apiModel', 'type': 'object', 
-            'properties': {
-                'name': {'title': 'Name', 'type': 'string'}, 
-                'path': {'title': 'Path', 'type': 'string'}, 
-                'pythonVersion': {'title': 'Pythonversion', 'type': 'string'}
-            }, 
-            'required': ['name', 'path', 'pythonVersion']
-        }
-    '''
     async def create_schema(self, table, schema):
         pk_name = table + "id"
 
         if self.DB_TYPE == "sqlite":            
             type_map = {
                 'string': 'TEXT',
-                'integer': 'INT',
+                'integer': 'INTEGER',
                 'float': 'FLOAT'
             }
             sqlite_schema_string = await self.fetchone(f"SELECT sql FROM sqlite_master WHERE name = '{table}'")
@@ -123,7 +114,7 @@ class AsyncDB:
             else:
                 columns = ", ".join([f"{k} {type_map[v['type']]}" for k,v in schema['properties'].items()])
                 print(f"CREATE TABLE {table} ({pk_name} INT PRIMARY KEY, {columns})")
-                await self.db.execute(f"CREATE TABLE {table} ({pk_name} INT PRIMARY KEY, {columns})")
+                await self.db.execute(f"CREATE TABLE {table} ({pk_name} INTEGER PRIMARY KEY AUTOINCREMENT, {columns})")
         else:
             # TODO: Create table generation for MySQL/MariaDB
             pass

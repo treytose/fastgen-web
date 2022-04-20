@@ -24,6 +24,7 @@ const Config = () => {
 
   const fetchAPIs = useCallback(() => {
     axios.get("/api/fastgen_api").then((resp) => {
+      console.log(resp);
       setApiList(resp.data.map((api: FastgenAPI) => api));
     });
   }, []);

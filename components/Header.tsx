@@ -14,6 +14,7 @@ import Image from "next/image";
 import logo from "../public/logo.png";
 import Link from "next/link";
 import AppContext from "../store/AppContext";
+import { useRouter } from "next/router";
 
 type Page = {
   name: string;
@@ -26,12 +27,22 @@ const pages: Page[] = [
     path: "/",
   },
   {
+    name: "Create API",
+    path: "/generate/api",
+  },
+  {
+    name: "Connect to API",
+    path: "/config",
+  },
+  {
     name: "Create Entity",
     path: "/generate/entity",
   },
 ];
 
 const Header = () => {
+  const router = useRouter();
+
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
   );

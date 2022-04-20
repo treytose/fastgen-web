@@ -11,3 +11,11 @@ class Fastgen_apiModel(BaseModel):
     dbName: Optional[str] = Query('fast.db', title="Database Name", description="The name of the database or file", optional=True) 
     dbUser: Optional[str] = Query(None, title="Database User", description="The database user", optional=True) 
     dbPass: Optional[str] = Query(None, title="Database Password", description="The database password", optional=True)
+
+
+class EntityModel(BaseModel):
+    name: str
+    router_code: str
+    main_code: str
+    lib_code: str
+    schema_code: str
