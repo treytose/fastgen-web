@@ -111,15 +111,21 @@ export default function generateCode(entity: string, columns: EColumn[]) {
                     typeMap[c.type]
                 }] = Query(${formatDefault(c)}, title="${
                     c.title || c.name
-                }", description="${c.description || ""}", optional=true ${
-                    c.hideOnForm ? ", hideOnForm=True" : ""
-                })`;
+                }", description="${c.description || ""}" ${
+                    c.type === "VARCHAR" && c.typeArg
+                        ? ", max_length=" + c.typeArg
+                        : ""
+                } , optional=true ${c.hideOnForm ? ", hideOnForm=True" : ""})`;
             } else {
                 return `${c.name}: ${typeMap[c.type]} = Query(${formatDefault(
                     c
                 )}, title="${c.title || c.name}", description="${
                     c.description || ""
-                }"${c.hideOnForm ? ", hideOnForm=True" : ""})`;
+                }" ${
+                    c.type === "VARCHAR" && c.typeArg
+                        ? ", max_length=" + c.typeArg
+                        : ""
+                } ${c.hideOnForm ? ", hideOnForm=True" : ""})`;
             }
         })
         .join(" \n          ");

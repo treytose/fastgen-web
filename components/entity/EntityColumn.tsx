@@ -58,25 +58,25 @@ const EntityColumn: FC<Props> = ({
   const nameRef = useRef<HTMLInputElement>();
   const typeArgRef = useRef<HTMLInputElement>();
 
-  const handleNameUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
     const name = event.target.value;
     onUpdate(index, { ...ecolumn, name });
   };
 
-  const handleTitleUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
     const title = event.target.value;
     onUpdate(index, { ...ecolumn, title });
   };
 
   const handleDescriptionUpdate = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.FocusEvent<HTMLInputElement>
   ) => {
     const description = event.target.value;
     onUpdate(index, { ...ecolumn, description });
   };
 
   const handleDefaultValueUpdate = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.FocusEvent<HTMLInputElement>
   ) => {
     const defaultValue = event.target.value;
     onUpdate(index, { ...ecolumn, defaultValue });
@@ -126,7 +126,7 @@ const EntityColumn: FC<Props> = ({
       </AccordionDetails>
     </Accordion>
   ) : (
-    <Accordion sx={{ backgroundColor: grey[800] }}>
+    <Accordion sx={{ backgroundColor: "background.default" }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon color="primary" />}>
         <TextField
           placeholder="Enter column name"

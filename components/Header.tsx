@@ -133,7 +133,7 @@ const Header = () => {
 
           {appCtx.apiConnected ? (
             <Tooltip title="Serverside features are enabled">
-              <Chip variant="outlined" color="success" label="API Connected" />
+              <Chip variant="outlined" color="success" label="Connected" />
             </Tooltip>
           ) : (
             <Tooltip title="Enable the Fastgen-api on your server to unlock serverside features">
