@@ -122,7 +122,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       queryArgs.push(`description="${c.description}"`);
     }
 
-    if (c.typeArg) {
+    if (c.type == "VARCHAR" && c.typeArg) {
       queryArgs.push(`max_length=${c.typeArg}`);
     }
 
