@@ -10,11 +10,15 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
+import ModeNightIcon from "@mui/icons-material/ModeNight";
+import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import Image from "next/image";
 import logo from "../public/logo.png";
 import Link from "next/link";
 import AppContext from "../store/AppContext";
+import SettingsContext from "../store/SettingsContext";
 import { useRouter } from "next/router";
+import { themes } from "../themes/themes";
 
 type Page = {
   name: string;
@@ -42,6 +46,8 @@ const pages: Page[] = [
 
 const Header = () => {
   const router = useRouter();
+  const settingsCtx = useContext(SettingsContext);
+  const appCtx = useContext(AppContext);
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
@@ -49,8 +55,6 @@ const Header = () => {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   );
-
-  const appCtx = useContext(AppContext);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -65,6 +69,13 @@ const Header = () => {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const switchTheme = () => {
+    const newTheme =
+      settingsCtx.theme.name === "default" ? themes.dark : themes.default;
+    settingsCtx.setTheme(newTheme);
+    localStorage.setItem("preferred-theme", newTheme.name);
   };
 
   return (
@@ -158,6 +169,18 @@ const Header = () => {
               </Box>
             </Tooltip>
           )}
+
+          <Box sx={{ marginLeft: "1rem" }}>
+            {settingsCtx.theme.name === "dark" ? (
+              <IconButton onClick={switchTheme}>
+                <WbSunnyIcon color="primary" />
+              </IconButton>
+            ) : (
+              <IconButton onClick={switchTheme}>
+                <ModeNightIcon color="primary" />
+              </IconButton>
+            )}
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

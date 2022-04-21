@@ -16,7 +16,7 @@ const Home: NextPage = () => {
     return (
         <Container>
             <Grid container spacing={2}>
-                <Grid item xs={8}>
+                <Grid item xs={12}>
                     <ColumnCard title="Tools">
                         <Stack direction="row" spacing={2}>
                             <Link href="/generate/entity">
@@ -42,9 +42,6 @@ const Home: NextPage = () => {
                             </Link>
                         </Stack>
                     </ColumnCard>
-                </Grid>
-                <Grid item xs={4}>
-                    <ThemeSelection />
                 </Grid>
                 <Grid item xs={12}>
                     <Guide />
