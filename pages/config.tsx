@@ -44,7 +44,7 @@ const Config = () => {
           <ColumnCard title="Select an API to Configure">
             <List>
               {apiList.map((api) => (
-                <ListItem key={api}>
+                <ListItem key={api.fastgen_apiid}>
                   <ListItemButton
                     selected={appCtx.api && appCtx.api.name === api.name}
                     onClick={(e) => onApiSelected(api)}

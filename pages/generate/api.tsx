@@ -1,18 +1,25 @@
 import { useRef, useState, useContext } from "react";
-import { Container, Grid } from "@mui/material";
+import { Container, Grid, Typography } from "@mui/material";
 import ColumnCard from "../../components/ColumnCard";
-import { useRouter } from "next/router";
 import AppContext from "../../store/AppContext";
 import FastForm from "../../components/FastForm";
 
 const API = () => {
+  const appCtx = useContext(AppContext);
+
   return (
     <Container>
       <Grid container spacing={2}>
         <Grid item xs={2}></Grid>
         <Grid item xs={8}>
           <ColumnCard>
-            <FastForm entity="fastgen_api" />
+            {appCtx.apiConnected ? (
+              <FastForm entity="fastgen_api" />
+            ) : (
+              <Typography>
+                You must enable the API to use this feature.
+              </Typography>
+            )}
           </ColumnCard>
         </Grid>
       </Grid>
