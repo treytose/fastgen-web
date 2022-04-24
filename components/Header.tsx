@@ -145,12 +145,14 @@ const Header = () => {
             ))}
           </Box>
           {appCtx.api && (
-            <Chip
-              variant="outlined"
-              color="info"
-              label={`Configuring API: ${appCtx.api.name}`}
-              sx={{ marginRight: "1rem" }}
-            />
+            <Tooltip title={`API ID = ${appCtx.api.fastgen_apiid}`}>
+              <Chip
+                variant="outlined"
+                color="info"
+                label={`Configuring API: ${appCtx.api.name}`}
+                sx={{ marginRight: "1rem" }}
+              />
+            </Tooltip>
           )}
 
           {appCtx.apiConnected ? (

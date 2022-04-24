@@ -1,11 +1,11 @@
-import os, shutil, subprocess
+import os, shutil, subprocess, secrets
 from fastapi import HTTPException
 from app.dependencies import db
 from app.schemas.fastgen_api import Fastgen_apiModel, EntityModel
 
 class Fastgen_api:
     def __init__(self):
-        self.BASE_TEMPLATE_PATH = "app/data/fastapi-base"
+        self.BASE_TEMPLATE_PATH = "app/data/templates/"
 
     async def generate(self):
         await db.create_schema("fastgen_api", Fastgen_apiModel.schema())
@@ -24,7 +24,9 @@ class Fastgen_api:
     async def create_fastgen_api(self, fastgen_api: Fastgen_apiModel):
         if os.path.exists(os.path.join(fastgen_api.path, fastgen_api.name)):
             raise HTTPException(status_code=500, detail="File already exists")
-        shutil.copytree(self.BASE_TEMPLATE_PATH, os.path.join(fastgen_api.path, fastgen_api.name))
+        
+        template_path = os.path.join(self.BASE_TEMPLATE_PATH, fastgen_api.template)
+        shutil.copytree(template_path, os.path.join(fastgen_api.path, fastgen_api.name))
 
 
         # create the virtual environment and install required packages #
@@ -41,16 +43,21 @@ class Fastgen_api:
 
         with open(os.path.join(fastgen_api.path, fastgen_api.name, ".env"), "w") as f:
             if fastgen_api.dbType:
-                f.write(f'DB_TYPE="{fastgen_api.dbType}"\n')                
+                f.write(f'DB_TYPE={fastgen_api.dbType}\n')                
 
             if fastgen_api.dbHost:
-                f.write(f'DB_HOST="{fastgen_api.dbHost}"\n')                                
+                f.write(f'DB_HOST={fastgen_api.dbHost}\n')                                
 
             if fastgen_api.dbName:
-                f.write(f'DB_NAME="{fastgen_api.dbName}"\n') 
+                f.write(f'DB_NAME={fastgen_api.dbName}\n') 
 
             if fastgen_api.dbPass:
-                f.write(f'DB_PASS="{fastgen_api.dbPass}"\n')                                                                                
+                f.write(f'DB_PASS={fastgen_api.dbPass}\n')
+                
+            if fastgen_api.template == "auth-jwt":
+                f.write(f'SECRET_KEY={secrets.token_urlsafe(32)}')
+                f.write('ALGORITHM=HS256\n')
+                
 
         os.chdir(owd)
 

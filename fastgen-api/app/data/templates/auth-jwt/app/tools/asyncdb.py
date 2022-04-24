@@ -90,7 +90,8 @@ class AsyncDB:
             type_map = {
                 'string': 'TEXT',
                 'integer': 'INTEGER',
-                'float': 'FLOAT'
+                'float': 'FLOAT',
+                'number': 'FLOAT'
             }
             sqlite_schema_string = await self.fetchone(f"SELECT sql FROM sqlite_master WHERE name = '{table}'")
 

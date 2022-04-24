@@ -229,25 +229,28 @@ const Entity = () => {
             )}
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography variant="h5"> Output </Typography>
-              {entity && (
-                <Tooltip
-                  title={
-                    appCtx.api
-                      ? `Inject into ${appCtx.api.name}`
-                      : `Connect to an API in order to inject this code`
-                  }
+
+              <Tooltip
+                title={
+                  appCtx.api
+                    ? `Inject into ${appCtx.api.name}`
+                    : `Connect to an API in order to inject this code`
+                }
+              >
+                <Button
+                  variant="contained"
+                  color={appCtx.api ? "success" : "error"}
+                  onClick={handleInject}
                 >
-                  <Button
-                    variant="contained"
-                    color={appCtx.api ? "success" : "error"}
-                    onClick={handleInject}
-                  >
-                    Inject into API
-                  </Button>
-                </Tooltip>
-              )}
+                  Inject into API
+                </Button>
+              </Tooltip>
             </Box>
-            {entity && steps.map((step, i) => RenderStep(step, i))}
+            {entity ? (
+              steps.map((step, i) => RenderStep(step, i))
+            ) : (
+              <Typography> Enter an entity name on the left. </Typography>
+            )}
           </ColumnCard>
         </Grid>
       </Grid>

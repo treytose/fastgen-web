@@ -3,13 +3,14 @@ import axios, { AxiosError } from "axios";
 import {
   FormControl,
   TextField,
-  Typography,
+  Box,
   Button,
   Grid,
   Alert,
   Select,
   MenuItem,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 
 import { useRouter } from "next/router";
@@ -139,7 +140,9 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
   return (
     <>
       {loading ? (
-        <Typography> Loading </Typography>
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
       ) : (
         <>
           {error && (
