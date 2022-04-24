@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Box, Theme, Typography } from "@mui/material";
+import { Box, Theme, CircularProgress } from "@mui/material";
 
 const PageLoading: FC<{ theme: Theme }> = ({ theme }) => {
   return (
@@ -13,7 +13,7 @@ const PageLoading: FC<{ theme: Theme }> = ({ theme }) => {
         justifyContent: "center",
       }}
     >
-      <Typography> Loading </Typography>
+      <CircularProgress />
     </Box>
   );
 };
