@@ -86,6 +86,9 @@ class AsyncDB:
     async def create_schema(self, table, schema):
         pk_name = table + "id"
 
+        if pk_name in schema['properties']:
+            del schema['properties'][pk_name]
+
         if self.DB_TYPE == "sqlite":            
             type_map = {
                 'string': 'TEXT',
