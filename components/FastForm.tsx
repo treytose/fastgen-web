@@ -50,6 +50,11 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
             props.push({
               index,
               name: key,
+              value: value.default
+                ? value.default
+                : !!value.allowed_values && value.allowed_values.length > 0
+                ? value.allowed_values[0]
+                : null,
               ...value,
             });
           }
@@ -66,7 +71,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const body: { [key: string]: any } = {};
+    let body: { [key: string]: any } = {};
     properties.forEach((prop) => {
       if (prop.value) {
         body[prop.name] = prop.value;

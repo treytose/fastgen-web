@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.libraries.libfastgen_api import Fastgen_api
 from app.schemas.fastgen_api import Fastgen_apiModel, EntityModel
 
-router = APIRouter()
+router = APIRouter(tags=["Fastgen API"])
 oFastgen_api = Fastgen_api()
 
 @router.get("/fastgen_api/schema")
