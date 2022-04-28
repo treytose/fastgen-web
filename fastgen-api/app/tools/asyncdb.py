@@ -1,5 +1,8 @@
 import os
 from databases import Database
+from rich.console import Console
+
+console = Console()
 
 class AsyncDB:
     def __init__(self):
@@ -22,7 +25,7 @@ class AsyncDB:
             connection_string = 'mysql://%s:%s@%s/%s?charset=utf8' % (                
                 self.DB_USER,
                 self.DB_PASS,
-               self.DB_HOST,
+                self.DB_HOST,
                 self.DB_NAME
             )        
 
@@ -38,7 +41,7 @@ class AsyncDB:
     async def connect(self):
         await self.db.connect()
         if self.db.is_connected:
-            print("database connection OK")
+            console.print("[green]database connection OK")
 
     async def disconnect(self):
         await self.db.disconnect()
@@ -48,8 +51,14 @@ class AsyncDB:
         result = await self.db.fetch_one(*args, **kwargs)
         return result
 
-    async def fetchall(self, *args, **kwargs):
-        results = await self.db.fetch_all(*args, **kwargs)
+    async def fetchall(self, query, *args, as_dict=True, **kwargs):
+        results = await self.db.fetch_all(query, *args, **kwargs)        
+
+        if as_dict:
+            table_name = as_dict if isinstance(as_dict, str) else query.split("FROM")[0].split("WHERE")[0]            
+            description = await self.db.fetch_all(f"DESCRIBE {table_name}")
+            print(description)
+
         return results
     
     async def insert(self, table: str, entity: dict):
@@ -89,38 +98,130 @@ class AsyncDB:
         if pk_name in schema['properties']:
             del schema['properties'][pk_name]
 
-        if self.DB_TYPE == "sqlite":            
-            type_map = {
-                'string': 'TEXT',
-                'integer': 'INTEGER',
-                'float': 'FLOAT',
-                'number': 'FLOAT'
-            }
-            sqlite_schema_string = await self.fetchone(f"SELECT sql FROM sqlite_master WHERE name = '{table}'")
-
-            if sqlite_schema_string:
-                sqlite_schema_string = sqlite_schema_string[0]
-                sqlite_schema = {k:{"type": v, "args": [*args]} for k,v,*args in [row.strip().split(' ') for row in sqlite_schema_string.split("(")[1].rstrip(');').split(',')]}
-                if pk_name in sqlite_schema:
-                    del sqlite_schema[pk_name]
-
-                in_schema_and_not_table = list(filter(lambda k: k not in sqlite_schema.keys(), list(schema['properties'].keys())))
-                in_table_and_not_schema = list(filter(lambda k: k not in schema['properties'].keys(), list(sqlite_schema.keys())))
-
-                for column_name in in_schema_and_not_table:
-                    column = schema['properties'][column_name]
-                    _type = type_map[column['type']]
-                    await self.db.execute(f"ALTER TABLE {table} ADD COLUMN {column_name} {_type}")
-                    print("Adding Column: ", column_name, _type)
-
-                for column_name in in_table_and_not_schema:
-                    print(f"WARNING: Schema {schema['title']} is missing property: {column_name}")
-            else:
-                columns = ", ".join([f"{k} {type_map[v['type']]}" for k,v in schema['properties'].items()])
-                print(f"CREATE TABLE {table} ({pk_name} INT PRIMARY KEY, {columns})")
-                await self.db.execute(f"CREATE TABLE {table} ({pk_name} INTEGER PRIMARY KEY AUTOINCREMENT, {columns})")
+        if self.DB_TYPE == "sqlite":        
+            return await self.__generate_sqlite_table__(table, schema)    
         else:
-            # TODO: Create table generation for MySQL/MariaDB
-            pass
+            return await self.__generate_sql_table__(table, schema)
+
+    async def __generate_sql_table__(self, table, schema):
+        pk_name = table + "id"
+
+        type_map = {
+            'string': 'VARCHAR',
+            'boolean': 'BOOLEAN',
+            'integer': 'INTEGER',
+            'number': 'FLOAT',
+            'date-time': 'DATETIME',
+            'date': 'DATE'
+        }         
+
+        def get_column_def(name, prop):
+            _type = None
+            if 'format' in prop and prop['format'] in type_map:
+                _type = type_map[prop['format']]
+            elif prop['type'] in type_map:
+                _type = type_map[prop['type']]
+
+            if not _type:
+                return
+
+            type_arg = ""
+            if _type == 'VARCHAR':
+                if prop.get('maxLength'):
+                    type_arg = prop['maxLength']
+                else:
+                    type_arg = 32
+
+            if type_arg:
+                type_arg = f"({type_arg})"
+
+            nullable = "NOT NULL" if name in schema['required'] else "NULL"
+
+            default = ""
+            if prop.get("default"):
+                if prop.get("type") == "string":
+                    default = f"DEFAULT '{prop['default']}'"
+                else:
+                    default = f"DEFAULT {prop['default']}"
+
+            comment = f"COMMENT '{prop['description']}'" if prop.get("description") else ""            
+            column_def = f"{name} {_type}{type_arg} {nullable} {default} {comment}"
+            return column_def
+
+        try:
+            sql_schema = await self.fetchall(f"DESCRIBE {table}", as_dict=False)
+        except Exception as e:
+            sql_schema = None
+
+        if sql_schema:
+            table_keys = [s[0] for s in sql_schema]
+
+            in_schema_and_not_table = list(filter(lambda k: k not in table_keys, list(schema['properties'].keys())))
+            in_table_and_not_schema = list(filter(lambda k: k not in schema['properties'].keys() and k != pk_name, table_keys))
+            
+            for column_name in in_schema_and_not_table:
+                column_def = get_column_def(column_name, schema['properties'][column_name])                
+
+                alter_table_sql = f'ALTER TABLE {table} ADD COLUMN {column_def}'
+                await self.db.execute(alter_table_sql)
+                console.print(f'MySQL updated: [purple on black]{alter_table_sql}')
+
+            for column_name in in_table_and_not_schema:
+                console.print(f"[yellow]:warning:  WARNING:[/yellow] column '{column_name}' in table '{table}' but not in schema '{schema['title']}'")
+
+        else:
+            # create table #
+            columns = []
+            for name, prop in schema['properties'].items():
+                column_def = get_column_def(name, prop)
+                if column_def:
+                    columns.append(column_def)                
+                
+
+            column_str = ",\n                    ".join(columns)
+            create_table_sql = f'''
+                CREATE TABLE IF NOT EXISTS {table} (
+                    {pk_name} INT PRIMARY KEY AUTO_INCREMENT, 
+                    {column_str}
+                )
+            '''
+
+            console.print(f'[purple on black]{create_table_sql}')
+
+            await self.db.execute(create_table_sql)
+
+    async def __generate_sqlite_table__(self, table, schema):
+        pk_name = table + "id"
+
+        type_map = {
+            'string': 'TEXT',
+            'integer': 'INTEGER',
+            'float': 'FLOAT',
+            'number': 'FLOAT'
+        }
+        sqlite_schema_string = await self.fetchone(f"SELECT sql FROM sqlite_master WHERE name = '{table}'")
+
+        if sqlite_schema_string:
+            sqlite_schema_string = sqlite_schema_string[0]
+            sqlite_schema = {k:{"type": v, "args": [*args]} for k,v,*args in [row.strip().split(' ') for row in sqlite_schema_string.split("(")[1].rstrip(');').split(',')]}
+            if pk_name in sqlite_schema:
+                del sqlite_schema[pk_name]
+
+            in_schema_and_not_table = list(filter(lambda k: k not in sqlite_schema.keys(), list(schema['properties'].keys())))
+            in_table_and_not_schema = list(filter(lambda k: k not in schema['properties'].keys(), list(sqlite_schema.keys())))
+
+            for column_name in in_schema_and_not_table:
+                column = schema['properties'][column_name]
+                _type = type_map[column['type']]
+                await self.db.execute(f"ALTER TABLE {table} ADD COLUMN {column_name} {_type}")
+                console.print(f"Updating SQLite table [purple on black] ALTER TABLE {table} ADD COLUMN {column_name} {_type}")
+
+            for column_name in in_table_and_not_schema:
+                console.print(f"[yellow]:warning: [/yellow] Schema {schema['title']} is missing property: {column_name}")
+        else:
+            columns = ", ".join([f"{k} {type_map[v['type']]}" for k,v in schema['properties'].items()])
+            console.print(f"[purple on black]CREATE TABLE {table} ({pk_name} INT PRIMARY KEY, {columns})")
+            await self.db.execute(f"CREATE TABLE {table} ({pk_name} INTEGER PRIMARY KEY AUTOINCREMENT, {columns})")
+
         
 
