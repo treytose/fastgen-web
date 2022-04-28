@@ -14,7 +14,10 @@ const API = () => {
         <Grid item xs={8}>
           <ColumnCard>
             {appCtx.apiConnected ? (
-              <FastForm entity="fastgen_api" />
+              <FastForm
+                entity="fastgen_api"
+                axiosOptions={{ timeout: 120 * 1000 }}
+              />
             ) : (
               <Typography>
                 You must enable the API to use this feature.

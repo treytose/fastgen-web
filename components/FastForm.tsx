@@ -18,6 +18,7 @@ import AppContext from "../store/AppContext";
 
 type FastFormProps = {
   entity: string;
+  axiosOptions?: object;
 };
 
 type Property = {
@@ -32,7 +33,7 @@ type Property = {
   allowed_values: string[] | number[];
 };
 
-const FastForm: FC<FastFormProps> = ({ entity }) => {
+const FastForm: FC<FastFormProps> = ({ entity, axiosOptions = {} }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [properties, setProperties] = useState<Property[]>([]);
@@ -80,7 +81,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
 
     setLoading(true);
     axios
-      .post(`/api/${entity}`, body)
+      .post(`/api/${entity}`, body, axiosOptions)
       .then((resp) => {
         setLoading(false);
         setError("");
@@ -143,7 +144,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
   return (
     <>
       {loading ? (
-        <Box sx={{ display: "flex" }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <CircularProgress />
         </Box>
       ) : (

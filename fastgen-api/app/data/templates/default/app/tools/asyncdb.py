@@ -51,14 +51,8 @@ class AsyncDB:
         result = await self.db.fetch_one(*args, **kwargs)
         return result
 
-    async def fetchall(self, query, *args, as_dict=True, **kwargs):
-        results = await self.db.fetch_all(query, *args, **kwargs)        
-
-        if as_dict:
-            table_name = as_dict if isinstance(as_dict, str) else query.split("FROM")[0].split("WHERE")[0]            
-            description = await self.db.fetch_all(f"DESCRIBE {table_name}")
-            print(description)
-
+    async def fetchall(self, *args, **kwargs):
+        results = await self.db.fetch_all(*args, **kwargs)        
         return results
     
     async def insert(self, table: str, entity: dict):
@@ -149,7 +143,7 @@ class AsyncDB:
             return column_def
 
         try:
-            sql_schema = await self.fetchall(f"DESCRIBE {table}", as_dict=False)
+            sql_schema = await self.fetchall(f"DESCRIBE {table}")
         except Exception as e:
             sql_schema = None
 

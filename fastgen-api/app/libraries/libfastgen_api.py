@@ -46,7 +46,10 @@ class Fastgen_api:
                 f.write(f'DB_TYPE={fastgen_api.dbType}\n')                
 
             if fastgen_api.dbHost:
-                f.write(f'DB_HOST={fastgen_api.dbHost}\n')                                
+                f.write(f'DB_HOST={fastgen_api.dbHost}\n')       
+
+            if fastgen_api.dbUser:                         
+                f.write(f'DB_USER={fastgen_api.dbUser}\n')       
 
             if fastgen_api.dbName:
                 f.write(f'DB_NAME={fastgen_api.dbName}\n') 
