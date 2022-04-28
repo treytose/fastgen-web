@@ -107,9 +107,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
           <InputLabel>{property.title}</InputLabel>
           <Select
             label={property.title}
-            value={
-              property.value || property.default || property.allowed_values[0]
-            }
+            value={property.value}
             onChange={(e) => {
               handlePropertyUpdate(property.index, e.target.value);
             }}
@@ -131,7 +129,7 @@ const FastForm: FC<FastFormProps> = ({ entity }) => {
             variant="standard"
             label={property.title}
             name={property.name}
-            value={property.value || property.default || ""}
+            value={property.value || ""}
             fullWidth
             required={!property.optional}
             onChange={(e) =>
