@@ -1,4 +1,4 @@
-import traceback
+import traceback, base64
 from datetime import datetime, timedelta
 from ldap3 import Server, Connection, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES, ALL
 from fastapi import HTTPException
@@ -75,16 +75,21 @@ class Auth:
             "displayName": "display_name",
             "givenName": "given_name",
             "mail": "email",
+            "title": "title",
             "department": "department",
             "telephoneNumber": "phone",
             "company": "company",
             "employeeID": "employee_id",
-            "thumbnailPhoto": "employee_photo"
+            "thumbnailPhoto": "employee_photo",
         }
     
         user_details = {}
         for attr, value in resp[0]['attributes'].items():
             if attr in ad_user_map:
+                if attr == "thumbnailPhoto" and isinstance(value, bytes):
+                    # value = value.decode('ISO-8859-1')
+                    value = base64.b64encode(value)
+
                 user_details[ad_user_map[attr]] = value                
 
         oUser = User(**user_details)

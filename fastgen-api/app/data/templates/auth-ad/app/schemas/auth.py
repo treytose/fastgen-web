@@ -17,10 +17,15 @@ class User(BaseModel):
     department: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
+    title: Optional[str] = None
     employee_id: Optional[int] = None
     employee_photo: Optional[bytes] = None
 
 
 class UserInDB(User):    
     userid: int = Query(None)
+
+class LoginModel(BaseModel):
+    username: str = Query(..., max_length=64)
+    password: str = Query(None)
     

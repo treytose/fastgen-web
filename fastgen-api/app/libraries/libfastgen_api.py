@@ -57,7 +57,7 @@ class Fastgen_api:
             if fastgen_api.dbPass:
                 f.write(f'DB_PASS={fastgen_api.dbPass}\n')
                 
-            if fastgen_api.template == "auth-jwt":
+            if fastgen_api.template in ["auth-jwt", "auth-ad"]:
                 f.write(f'SECRET_KEY={secrets.token_urlsafe(32)}')
                 f.write('ALGORITHM=HS256\n')
                 
