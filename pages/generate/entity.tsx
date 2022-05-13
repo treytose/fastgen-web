@@ -15,6 +15,7 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 // components
 import ColumnCard from "../../components/ColumnCard";
 import Code from "../../components/Code";
+import APISelector from "../../components/APISelector";
 import EntityColumn, { EColumn } from "../../components/entity/EntityColumn";
 
 import AppContext from "../../store/AppContext";
@@ -33,6 +34,16 @@ const Entity = () => {
   const [schemaCode, setSchemaCode] = useState<string>("");
   const [sqlCode, setSqlCode] = useState<string>("");
   const [columns, setColumns] = useState<EColumn[]>([]);
+
+  const [apiSelectOpen, setApiSelectOpen] = useState<boolean>(false);
+
+  const handleApiSelectOpen = () => {
+    setApiSelectOpen(true);
+  };
+
+  const handleApiSelectClose = () => {
+    setApiSelectOpen(false);
+  };
 
   const handleAddColumn = () => {
     setColumns((columns) => {
@@ -177,6 +188,7 @@ const Entity = () => {
 
   return (
     <>
+      <APISelector open={apiSelectOpen} handleClose={handleApiSelectClose} />
       <Grid container spacing={2}>
         <Grid item xs={5}>
           <ColumnCard title="Configuration">
@@ -240,7 +252,7 @@ const Entity = () => {
                 <Button
                   variant="contained"
                   color={appCtx.api ? "success" : "error"}
-                  onClick={handleInject}
+                  onClick={appCtx.api ? handleInject : handleApiSelectOpen}
                 >
                   Inject into API
                 </Button>

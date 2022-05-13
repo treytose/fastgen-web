@@ -129,7 +129,7 @@ class AsyncDB:
             if type_arg:
                 type_arg = f"({type_arg})"
 
-            nullable = "NOT NULL" if name in schema['required'] else "NULL"
+            nullable = "NOT NULL" if name in schema.get('required', []) else "NULL"
 
             default = ""
             if prop.get("default"):

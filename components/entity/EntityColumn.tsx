@@ -36,7 +36,7 @@ export type EColumn = {
   typeArg?: string;
   pk?: boolean;
   fk?: string;
-  allowedValues?: string[] | number[];
+  allowedValues?: string;
 };
 
 type Props = {
@@ -118,7 +118,7 @@ const EntityColumn: FC<Props> = ({
   ) => {
     onUpdate(index, {
       ...ecolumn,
-      allowedValues: event.target.value.split(","),
+      allowedValues: event.target.value,
     });
   };
 
