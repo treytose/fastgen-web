@@ -1,3 +1,66 @@
+# Fastgen Web
+
+## Getting Started
+Install required packages
+```
+npm install
+```
+
+Install FastAPI requirements
+```
+# cd to fastgen-api and create a virtual environment
+cd fastgen-api
+python3.9 -m venv venv
+
+# activate the environment and install the requirements
+source ./venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Run the NextJS app in development mode
+```
+npm run dev
+```
+
+Start the API
+```
+# in fastgen-api directory with the virtual environment activated
+uvicorn app.main:app --port 8000
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If the API is running and configured correctly, a green "Connected" icon on the top right of the navbar will appear
+
+## Creating an API
+To create a new FastAPI use the following steps:
+  - Navigate to [http://localhost:3000/generate/api](http://localhost:3000/generate/api) or click "Create API" in the top navigation bar
+  - Fill out the form choosing the desired API details, database connection settings, and python version
+    <br>
+    <small>(note: Some options are dependent on having the appropriate software installed on your server. e.g. selecting python3.6 requires you to have python3.6 available on your server)</small>
+  -  Click "Create" and wait while the API is generated
+
+## Connecting to an API  
+  In order to access some FastgenWeb features such as automatic entity injection, you must first connected to an API that was created with Fastgen Web
+  - Navigate to [http://localhost:3005/config](http://localhost:3005/config) or click "Connect to API" on the top navigation bar
+  - Select an API from the provided list 
+  - The selected API will appear in on the right of the top navigation bar
+
+## Creating an API entity 
+API entities can be created supporting automatic async CRUD operations, database table generation, permissions, logging, etc.
+The generated entity code can be copy and pasted or automatically injected if you are connected to a Fastgen API
+
+To create an entity
+  - Navigate to [http://localhost:3005/generate/entity](http://localhost:3005/generate/entity) or click "Create Entity" in the top navigation bar
+  - Enter an entity name
+  - Click "Add Column" to add new entity details
+  - Once your entity is ready either:
+    * Click the "Inject Into API" button <br>
+      or 
+    * Copy and paste the generated code
+
+# NextJS README
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
