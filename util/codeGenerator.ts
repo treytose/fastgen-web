@@ -7,6 +7,66 @@ export default function generateCode(entity: string, columns: EColumn[]) {
   const modelName = `${toTitle(entity)}Model`;
   const className = toTitle(entity);
 
+  function generate_fk_routes() {
+    let routes = "";
+    columns.forEach((ecolumn) => {
+      if (!ecolumn.fk || !ecolumn.fk.includes(".")) {
+        return;
+      }
+
+      let [name, col] = ecolumn.fk.split(".");
+
+      if (ecolumn.fkType === "many2many" || ecolumn.fkType === "one2many") {
+        routes += `
+      @router.get("/${entity}/{${pkName}}/${name}")
+      async def get_${entity}_${name}s(${pkName}: int):
+          return await ${libName}.get_${entity}_${name}s(${pkName})
+        `;
+      } else if (ecolumn.fkType === "one2one") {
+        routes += `
+      @router.get("/${entity}/{${pkName}}/${name}")
+      async def get_${entity}_${name}(${pkName}: int):
+          return await ${libName}.get_${entity}_${name}(${pkName})
+        `;
+      }
+    });
+
+    return routes;
+  }
+
+  function generate_fk_lib() {
+    let methods = "";
+    columns.forEach((ecolumn) => {
+      if (!ecolumn.fk || !ecolumn.fk.includes(".")) {
+        return;
+      }
+
+      let [name, col] = ecolumn.fk.split(".");
+
+      if (ecolumn.fkType === "many2many" || ecolumn.fkType === "one2many") {
+        methods += `          
+        async def get_${entity}_${name}s(self, ${pkName}: int):
+            return await db.fetchall('''
+              SELECT b.* FROM ${entity} a
+                INNER JOIN ${name} b ON b.${col} = a.${ecolumn.name}
+              WHERE a.${pkName} = :${pkName}
+            ''', {"${pkName}": ${pkName}})
+        `;
+      } else if (ecolumn.fkType === "one2one") {
+        methods += `
+        async def get_${entity}_${name}(self, ${pkName}: int):
+            return await db.fetchone('''
+              SELECT b.* FROM ${entity} a
+                INNER JOIN ${name} b ON b.${col} = a.${ecolumn.name}
+              WHERE a.${pkName} = :${pkName}
+            ''', {"${pkName}": ${pkName}})
+        `;
+      }
+    });
+
+    return methods;
+  }
+
   const mainCode = `
       from .routers import ${entity}
 
@@ -22,13 +82,8 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       ${libName} = ${className}()
 
       @router.get("/${entity}/schema")
-      async def get_${entity}_schema():      
-        schema = ${libName}.schema()
-        for v in schema['properties'].values():
-            allowed_values = v.get("form_options", {}).get("allowed_values")
-            if allowed_values and isinstance(allowed_values, str) and str.startswith(allowed_values.upper(), "SELECT"):                                
-                v["form_options"]["allowed_values"] = await db.fetchall(allowed_values)                            
-        return schema        
+      async def get_${entity}_schema():              
+        return ${libName}.get_${entity}_schema()        
 
       @router.get("/${entity}")
       async def get_${entity}_list(limit: int = 100):            
@@ -49,38 +104,47 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       @router.delete("/${entity}/{${pkName}}")
       async def delete_${entity}(${pkName}: int):
           return await ${libName}.delete_${entity}(${pkName})
+      ${generate_fk_routes()}
+
     `;
 
   const libCode = `
-      from app import db
-      from app.schemas.${entity} import ${modelName}
+    from app import db
+    from app.schemas.${entity} import ${modelName}
 
-      class ${className}:
-          async def generate(self):
-              await db.create_schema("${entity}", ${modelName}.schema())
+    class ${className}:
+        async def generate(self):
+            await db.create_schema("${entity}", ${modelName}.schema())
 
-          async def get_${entity}_schema(self):
-              return ${modelName}.schema()
+        async def get_${entity}_schema(self):
+            schema = ${modelName}.schema()
+            for v in schema['properties'].values():
+                allowed_values = v.get("form_options", {}).get("allowed_values")
+                if allowed_values and isinstance(allowed_values, str) and str.startswith(allowed_values.upper(), "SELECT"):                                
+                    v["form_options"]["allowed_values"] = await db.fetchall(allowed_values)                            
+            return schema
 
-          async def get_${entity}_list(self, limit: int = 100):
-              ${entity} = await db.fetchall("SELECT * FROM ${entity} LIMIT :limit", {"limit": limit})
-              return ${entity}
+        async def get_${entity}_list(self, limit: int = 100):
+            ${entity} = await db.fetchall("SELECT * FROM ${entity} LIMIT :limit", {"limit": limit})
+            return ${entity}
 
-          async def get_${entity}(self, ${pkName}: int):
-              ${entity} = await db.fetchone("SELECT * FROM ${entity} WHERE ${pkName}=:${pkName}", {"${pkName}": ${pkName}})
-              return ${entity}
+        async def get_${entity}(self, ${pkName}: int):
+            ${entity} = await db.fetchone("SELECT * FROM ${entity} WHERE ${pkName}=:${pkName}", {"${pkName}": ${pkName}})
+            return ${entity}
 
-          async def create_${entity}(self, ${entity}: ${modelName}):
-              ${pkName} = await db.insert("${entity}", ${entity})
-              return ${pkName}
+        async def create_${entity}(self, ${entity}: ${modelName}):
+            ${pkName} = await db.insert("${entity}", ${entity})
+            return ${pkName}
 
-          async def update_${entity}(self, ${pkName}: int, ${entity}: ${modelName}):
-              error_no = await db.update("${entity}", "${pkName}", ${pkName}, ${entity})
-              return error_no
+        async def update_${entity}(self, ${pkName}: int, ${entity}: ${modelName}):
+            error_no = await db.update("${entity}", "${pkName}", ${pkName}, ${entity})
+            return error_no
 
-          async def delete_${entity}(self, ${pkName}: int):
-              error_no = await db.delete("${entity}", "${pkName}", ${pkName})
-              return error_no
+        async def delete_${entity}(self, ${pkName}: int):
+            error_no = await db.delete("${entity}", "${pkName}", ${pkName})
+            return error_no
+        ${generate_fk_lib()}
+
     `;
 
   const typeMap = {
@@ -136,14 +200,16 @@ export default function generateCode(entity: string, columns: EColumn[]) {
       queryArgs.push(`max_length=${c.typeArg}`);
     }
 
+    if (c.fk) {
+      queryArgs.push(`foreign_key="${c.fk}"`);
+    }
+
     if (c.optional) {
       formOptions.optional = 1;
-      // queryArgs.push("optional=True");
     }
 
     if (c.hideOnForm) {
       formOptions.display = 0;
-      // queryArgs.push("hide_on_form=True");
     }
 
     if (c.allowedValues) {

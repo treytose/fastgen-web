@@ -36,6 +36,7 @@ export type EColumn = {
   typeArg?: string;
   pk?: boolean;
   fk?: string;
+  fkType?: "one2one" | "one2many" | "many2many";
   allowedValues?: string;
 };
 
@@ -56,7 +57,7 @@ const EntityColumn: FC<Props> = ({
 }) => {
   const typeArgRef = useRef<HTMLInputElement>();
   const [allowedValueToggle, setAllowedValueToggle] = useState<boolean>(false);
-  const [allowedValues, setAllowedValues] = useState<string[] | number[]>([]);
+  const [fkEnabled, setFkEnabled] = useState<boolean>(false);
 
   const handleNameUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
     const name = event.target.value;
@@ -122,6 +123,43 @@ const EntityColumn: FC<Props> = ({
     });
   };
 
+  const handleFKToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFkEnabled(event.target.checked);
+
+    if (!event.target.checked) {
+      onUpdate(index, {
+        ...ecolumn,
+        fk: "",
+      });
+    } else {
+      onUpdate(index, {
+        ...ecolumn,
+        fk: "",
+        fkType: "one2many",
+      });
+    }
+  };
+
+  const handleFkUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
+    onUpdate(index, {
+      ...ecolumn,
+      fk: event.target.value,
+    });
+  };
+
+  const handleFkTypeUpdate = (event: SelectChangeEvent) => {
+    onUpdate(index, {
+      ...ecolumn,
+      fkType: event.target.value,
+    });
+  };
+
+  const [expanded, setExpanded] = useState(true);
+
+  const toggleExpanded = () => {
+    setExpanded((e) => !e);
+  };
+
   return !allowEdit ? (
     <Accordion>
       <AccordionSummary>
@@ -143,14 +181,20 @@ const EntityColumn: FC<Props> = ({
       </AccordionDetails>
     </Accordion>
   ) : (
-    <Accordion sx={{ backgroundColor: "background.default" }}>
+    <Accordion
+      expanded={expanded}
+      sx={{ backgroundColor: "background.default" }}
+      onChange={toggleExpanded}
+    >
       <AccordionSummary expandIcon={<ExpandMoreIcon color="primary" />}>
         <TextField
           placeholder="Enter column name"
           defaultValue={ecolumn.name}
-          variant="standard"
+          variant="outlined"
+          fullWidth
           onBlur={handleNameUpdate}
           onClick={(e) => e.stopPropagation()}
+          sx={{ marginRight: "1rem" }}
         />
       </AccordionSummary>
       <AccordionDetails sx={{ padding: "1rem 3rem" }}>
@@ -271,6 +315,60 @@ const EntityColumn: FC<Props> = ({
                   fullWidth
                   onBlur={handleAllowedValuesUpdate}
                 />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="caption">
+                  If using a SELECT statement, ensure the results contain a
+                  "name" and "value" column. <br />
+                  e.g.
+                </Typography>
+                <Typography variant="caption" color="secondary">
+                  SELECT username as name, userid as value FROM user;
+                </Typography>
+              </Grid>
+            </>
+          )}
+          <Grid item xs={3}>
+            <Typography variant="h6" sx={{ color: "primary.main" }}>
+              RELATIONS:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <Stack direction="row">
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox onChange={handleFKToggle} />}
+                  label="Foreign Key"
+                />
+              </FormGroup>
+            </Stack>
+          </Grid>
+          {fkEnabled && (
+            <>
+              <Grid item xs={3}>
+                <Typography variant="h6" sx={{ color: "primary.main" }}>
+                  Foreign Key:
+                </Typography>
+              </Grid>
+              <Grid item xs={5}>
+                <TextField
+                  variant="standard"
+                  fullWidth
+                  placeholder="table.column_name"
+                  onBlur={handleFkUpdate}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <FormControl variant="standard" fullWidth>
+                  <Select
+                    defaultValue={"one2many"}
+                    onChange={handleFkTypeUpdate}
+                  >
+                    <MenuItem value="one2many"> One-To-Many</MenuItem>
+                    <MenuItem value="one2one"> One-To-One </MenuItem>
+                    <MenuItem value="many2one"> Many-To-One </MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
             </>
           )}
