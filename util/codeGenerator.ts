@@ -21,7 +21,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
   const pkName = `${entity}id`;
   const libName = `o${toTitle(entity)}`;
   const modelName = `${toTitle(entity)}Model`;
-  const joinedModelName = `${toTitle(entity)}JoinModel`;
+  const joinedModelName = `${toTitle(entity)}JoinedModel`;
   const className = toTitle(entity);
 
   function generate_fk_routes() {
@@ -64,7 +64,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
         methods += `          
         async def get_${entity}_${name}s(self, ${pkName}: int):
             return await db.fetchall('''
-              SELECT b.* FROM ${entity} a
+              SELECT b.* FROM \`${entity}\` a
                 INNER JOIN ${name} b ON b.${col} = a.${ecolumn.name}
               WHERE a.${pkName} = :${pkName}
             ''', {"${pkName}": ${pkName}})
@@ -73,7 +73,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
         methods += `
         async def get_${entity}_${name}(self, ${pkName}: int):
             return await db.fetchone('''
-              SELECT b.* FROM ${entity} a
+              SELECT b.* FROM \`${entity}\` a
                 INNER JOIN ${name} b ON b.${col} = a.${ecolumn.name}
               WHERE a.${pkName} = :${pkName}
             ''', {"${pkName}": ${pkName}})
@@ -143,11 +143,11 @@ export default function generateCode(entity: string, columns: EColumn[]) {
 
       @router.post("/${entity}")
       async def create_${entity}(${entity}: ${modelName}):
-          return await ${libName}.create_${entity}(${entity}.dict())
+          return await ${libName}.create_${entity}(${entity})
 
       @router.put("/${entity}/{${pkName}}")
       async def update_${entity}(${pkName}: int, ${entity}: ${modelName}):
-          return await ${libName}.update_${entity}(${pkName}, ${entity}.dict())
+          return await ${libName}.update_${entity}(${pkName}, ${entity})
 
       @router.delete("/${entity}/{${pkName}}")
       async def delete_${entity}(${pkName}: int):
@@ -198,9 +198,9 @@ ${generate_join_statements()}
     
                 searchSql += " OR ".join(searchItems)                                
                         
-            ${entity}_list = await db.fetchall(f"SELECT * FROM ${entity} {searchSql} {sortSql} LIMIT {offset}, {limit}", injectObject)
+            ${entity}_list = await db.fetchall(f"SELECT * FROM \`${entity}\` {searchSql} {sortSql} LIMIT {offset}, {limit}", injectObject)
     
-            total_count = await db.fetchone("SELECT count(*) as count FROM ${entity}")
+            total_count = await db.fetchone("SELECT count(*) as count FROM \`${entity}\`")
             meta = {
                 "total_count": total_count["count"]
             }
@@ -212,17 +212,18 @@ ${generate_join_statements()}
             return {"meta": meta, "data": ${entity}_list}
 
         async def get_${entity}(self, ${pkName}: int, joined: bool = False):
-            ${entity} = await db.fetchone("SELECT * FROM ${entity} WHERE ${pkName}=:${pkName}", {"${pkName}": ${pkName}})
+            ${entity} = await db.fetchone("SELECT * FROM \`${entity}\` WHERE ${pkName}=:${pkName}", {"${pkName}": ${pkName}})
             if joined:
                 ${entity} = self.__join_${entity}__(${entity})
             return ${entity}
 
         async def create_${entity}(self, ${entity}: ${modelName}):
-            ${pkName} = await db.insert("${entity}", ${entity})
+            ${pkName} = await db.insert("${entity}", ${entity}.dict())
             return ${pkName}
 
         async def update_${entity}(self, ${pkName}: int, ${entity}: ${modelName}):
-            error_no = await db.update("${entity}", "${pkName}", ${pkName}, ${entity})
+            ${entity}.${pkName} = ${pkName}
+            error_no = await db.update("${entity}", "${pkName}", ${pkName}, ${entity}.dict())
             return error_no
 
         async def delete_${entity}(self, ${pkName}: int):
@@ -243,7 +244,7 @@ ${generate_join_statements()}
   const needsDatetimeImport = columns.map((c) => c.type).includes("DATETIME");
   const formatDefault = (c: EColumn, isSql = false) => {
     if (!c.defaultValue) {
-      return "None";
+      return c.optional ? "None" : "...";
     }
 
     if (c.type === "VARCHAR") {
@@ -266,7 +267,7 @@ ${generate_join_statements()}
 
       let [name, col] = ecolumn.fk.split(".");
 
-      joins.push(`${name}: ${toTitle(name)}JoinModel = None`);
+      joins.push(`${name}: ${toTitle(name)}JoinedModel = None`);
     });
 
     return indent_and_join(joins, 12) || "            pass";
@@ -281,7 +282,7 @@ ${generate_join_statements()}
 
       let [name, col] = ecolumn.fk.split(".");
 
-      imports.push(`from .${name} import ${toTitle(name)}JoinModel`);
+      imports.push(`from .${name} import ${toTitle(name)}JoinedModel`);
     });
     return indent_and_join(imports, 6);
   }
@@ -294,6 +295,11 @@ ${generate_join_statements()}
       display?: number;
       allowed_values?: string | string[];
     } = {};
+
+    if (c.pk) {
+      formOptions.optional = 1;
+      formOptions.display = 0;
+    }
 
     if (c.optional) {
       columnString += `Optional[${typeMap[c.type]}] `;
@@ -347,7 +353,7 @@ ${generate_join_statements()}
   }
 
   const types = columns
-    .filter((c) => !c.pk)
+    // .filter((c) => !c.pk)
     .map(format_schema_column)
     .join(" \n          ");
 
@@ -366,7 +372,7 @@ ${generate_joined_schema()}
     `;
 
   const sqlCode = `
-      CREATE TABLE IF NOT EXISTS ${entity} (
+      CREATE TABLE IF NOT EXISTS \`${entity}\` (
         ${columns
           .map((c) =>
             c.pk

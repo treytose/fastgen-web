@@ -45,20 +45,20 @@ class AsyncDB:
 
     async def disconnect(self):
         await self.db.disconnect()
-        print("database connection closed")
+        print("database connection closed")  
 
     async def fetchone(self, *args, **kwargs):        
-        result = await self.db.fetch_one(*args, **kwargs)
-        return result
+        result = await self.db.fetch_one(*args, **kwargs)        
+        return result 
 
-    async def fetchall(self, *args, **kwargs):
-        results = await self.db.fetch_all(*args, **kwargs)        
+    async def fetchall(self, *args, **kwargs):                    
+        results = await self.db.fetch_all(*args, **kwargs)           
         return results
     
     async def insert(self, table: str, entity: dict):
         insert_id = await self.db.execute(
             query=f'''
-                INSERT INTO {table} ({",".join(entity.keys())}) 
+                INSERT INTO `{table}` ({",".join(entity.keys())}) 
                 VALUES ({",".join([f":{k}" for k in entity.keys()])})
             ''',
             values=entity)
@@ -67,7 +67,7 @@ class AsyncDB:
     async def update(self, table: str, key_column: str, key_value, entity: dict):
         error_no = await self.db.execute(
             query=f'''
-                UPDATE {table}
+                UPDATE `{table}`
                 SET {",".join([f'{k}=:{k}' for k in entity.keys()])}
                 WHERE {key_column}={key_value}
             ''',
@@ -78,7 +78,7 @@ class AsyncDB:
     async def delete(self, table: str, key_column: str, key_value):
         error_no = await self.db.execute(
             query=f'''
-                DELETE FROM {table}
+                DELETE FROM `{table}`
                 WHERE {key_column}=:{key_column}_value
             ''',
             values={f"{key_column}_value": key_value}
@@ -97,8 +97,8 @@ class AsyncDB:
         else:
             return await self.__generate_sql_table__(table, schema)
 
-    async def __generate_sql_table__(self, table, schema):
-        pk_name = table + "id"
+    async def __generate_sql_table__(self, table, schema):        
+        pk_name = table + "id"                          
 
         type_map = {
             'string': 'VARCHAR',
@@ -142,13 +142,31 @@ class AsyncDB:
             column_def = f"{name} {_type}{type_arg} {nullable} {default} {comment}"
             return column_def
 
+        def get_constraint(name, prop):            
+            try:
+                if not prop.get("foreign_key"):
+                    return ""
+
+                ftable, fcol = prop["foreign_key"].split(".")                
+                on_delete = "ON DELETE CASCADE" if name in schema.get('required', []) else "ON DELETE SET NULL"
+                constraint = f'''
+                    FOREIGN KEY ({name}) 
+                    REFERENCES {ftable}({fcol})
+                    {on_delete}
+                '''
+                return constraint
+            except Exception as e:
+                print(e)
+                console.print(f"[yellow]:warning:  WARNING:[/yellow] failed to generate constraint for '{name}'")
+            
         try:
-            sql_schema = await self.fetchall(f"DESCRIBE {table}")
+            sql_schema = await self.fetchall(f"DESCRIBE `{table}`")                               
         except Exception as e:
             sql_schema = None
 
-        if sql_schema:
-            table_keys = [s[0] for s in sql_schema]
+        if sql_schema:  
+            table_map = {s[0]: s for s in sql_schema}          
+            table_keys = list(table_map.keys())
 
             in_schema_and_not_table = list(filter(lambda k: k not in table_keys, list(schema['properties'].keys())))
             in_table_and_not_schema = list(filter(lambda k: k not in schema['properties'].keys() and k != pk_name, table_keys))
@@ -156,33 +174,57 @@ class AsyncDB:
             for column_name in in_schema_and_not_table:
                 column_def = get_column_def(column_name, schema['properties'][column_name])                
 
-                alter_table_sql = f'ALTER TABLE {table} ADD COLUMN {column_def}'
+                alter_table_sql = f'ALTER TABLE `{table}` ADD COLUMN {column_def}'
                 await self.db.execute(alter_table_sql)
                 console.print(f'MySQL updated: [purple on black]{alter_table_sql}')
 
             for column_name in in_table_and_not_schema:
                 console.print(f"[yellow]:warning:  WARNING:[/yellow] column '{column_name}' in table '{table}' but not in schema '{schema['title']}'")
 
+
+            sql_schema = await self.fetchall(f"DESCRIBE `{table}`")
+            # ensure constraints are added #            
+            for name, prop in schema['properties'].items():
+                constraint = get_constraint(name, prop)
+                if constraint:
+                    if not "MUL" in table_map[name]:
+                        alter_table_sql = f'ALTER TABLE `{table}` ADD CONSTRAINT {constraint}'
+                        await self.db.execute(alter_table_sql)
+                        console.print(f'MySQL updated: [purple on black]{alter_table_sql}')
+
         else:
             # create table #
-            columns = []
+            columns = []            
+            constraints = []
             for name, prop in schema['properties'].items():
                 column_def = get_column_def(name, prop)
-                if column_def:
-                    columns.append(column_def)                
+                constraint = get_constraint(name, prop)
                 
+                if column_def:
+                    columns.append(column_def)
+
+                if constraint:
+                    constraints.append(constraint)
+                                                                                
 
             column_str = ",\n                    ".join(columns)
+            if len(constraints) > 0:
+                column_str += ","
+                constraint_str = ",\n                ".join(constraints)
+            else:
+                constraint_str = ""
+
             create_table_sql = f'''
-                CREATE TABLE IF NOT EXISTS {table} (
+                CREATE TABLE IF NOT EXISTS `{table}` (
                     {pk_name} INT PRIMARY KEY AUTO_INCREMENT, 
                     {column_str}
+                    {constraint_str}
                 )
             '''
 
             console.print(f'[purple on black]{create_table_sql}')
 
-            await self.db.execute(create_table_sql)
+            await self.db.execute(create_table_sql)        
 
     async def __generate_sqlite_table__(self, table, schema):
         pk_name = table + "id"
