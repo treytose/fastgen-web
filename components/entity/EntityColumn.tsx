@@ -38,6 +38,7 @@ export type EColumn = {
   fk?: string;
   fkType?: "one2one" | "one2many" | "many2many";
   allowedValues?: string;
+  createJoinTable?: boolean;
 };
 
 type Props = {
@@ -58,6 +59,7 @@ const EntityColumn: FC<Props> = ({
   const typeArgRef = useRef<HTMLInputElement>();
   const [allowedValueToggle, setAllowedValueToggle] = useState<boolean>(false);
   const [fkEnabled, setFkEnabled] = useState<boolean>(false);
+  const [fkType, setFkType] = useState<string>("");
 
   const handleNameUpdate = (event: React.FocusEvent<HTMLInputElement>) => {
     const name = event.target.value;
@@ -148,9 +150,19 @@ const EntityColumn: FC<Props> = ({
   };
 
   const handleFkTypeUpdate = (event: SelectChangeEvent) => {
+    setFkType(event.target.value);
     onUpdate(index, {
       ...ecolumn,
       fkType: event.target.value,
+    });
+  };
+
+  const handleToggleCreateJoin = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    onUpdate(index, {
+      ...ecolumn,
+      createJoinTable: event.target.checked,
     });
   };
 
@@ -366,10 +378,22 @@ const EntityColumn: FC<Props> = ({
                   >
                     <MenuItem value="one2many"> One-To-Many</MenuItem>
                     <MenuItem value="one2one"> One-To-One </MenuItem>
-                    <MenuItem value="many2one"> Many-To-One </MenuItem>
+                    <MenuItem value="many2many"> Many-To-Many </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
+              {fkType == "many2many" && (
+                <Grid item xs={12}>
+                  <Stack direction="row">
+                    <FormGroup>
+                      <FormControlLabel
+                        control={<Checkbox onChange={handleToggleCreateJoin} />}
+                        label="Create Join Table"
+                      />
+                    </FormGroup>
+                  </Stack>
+                </Grid>
+              )}
             </>
           )}
           <Grid item xs={12} sx={{ textAlign: "right" }}>

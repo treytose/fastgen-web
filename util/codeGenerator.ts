@@ -317,6 +317,10 @@ ${generate_join_statements()}
 
     if (c.fk) {
       queryArgs.push(`foreign_key="${c.fk}"`);
+
+      if (c.createJoinTable) {
+        queryArgs.push(`join="${entity}_${c.fk.split(".")[0]}_link"`);
+      }
     }
 
     if (c.optional) {
