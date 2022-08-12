@@ -95,7 +95,7 @@ class Fastgen_api:
         with open(os.path.join(path, "app", "main.py"), "r") as f:
             main = f.read()
 
-        capName = entity.name[0].upper() + entity.name[1:]
+        capName = "".join([word[0].upper() + word[1:] for word in entity.name.split("_")])
 
         if not f"await {entity.name}.o{capName}.generate()" in main:
             main = insert_after(main, "await db.connect()", f"await {entity.name}.o{capName}.generate()")
