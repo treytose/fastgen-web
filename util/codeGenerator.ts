@@ -1,5 +1,5 @@
 import { EColumn } from "../components/entity/EntityColumn";
-import { toTitle } from ".";
+import { toTitle, toCamel } from ".";
 
 // helper function
 function indent_and_join(list: string[], spaces = 4) {
@@ -19,10 +19,10 @@ function indent_and_join(list: string[], spaces = 4) {
 
 export default function generateCode(entity: string, columns: EColumn[]) {
   const pkName = `${entity}id`;
-  const libName = `o${toTitle(entity)}`;
-  const modelName = `${toTitle(entity)}Model`;
-  const joinedModelName = `${toTitle(entity)}JoinedModel`;
-  const className = toTitle(entity);
+  const libName = `o${toCamel(entity)}`;
+  const modelName = `${toCamel(entity)}Model`;
+  const joinedModelName = `${toCamel(entity)}JoinedModel`;
+  const className = toCamel(entity);
 
   function generate_fk_routes() {
     let routes = "";
@@ -201,8 +201,10 @@ ${generate_join_statements()}
             ${entity}_list = await db.fetchall(f"SELECT * FROM \`${entity}\` {searchSql} {sortSql} LIMIT {offset}, {limit}", injectObject)
     
             total_count = await db.fetchone("SELECT count(*) as count FROM \`${entity}\`")
+            count = await db.fetchone(f"SELECT count(*) as count FROM \`${entity}\` {searchSql}", injectObject)
             meta = {
-                "total_count": total_count["count"]
+                "total_count": total_count["count"],
+                "count": count["count"]
             }
     
             if not joined:
@@ -267,7 +269,7 @@ ${generate_join_statements()}
 
       let [name, col] = ecolumn.fk.split(".");
 
-      joins.push(`${name}: ${toTitle(name)}JoinedModel = None`);
+      joins.push(`${name}: ${toCamel(name)}JoinedModel = None`);
     });
 
     return indent_and_join(joins, 12) || "            pass";
@@ -282,7 +284,7 @@ ${generate_join_statements()}
 
       let [name, col] = ecolumn.fk.split(".");
 
-      imports.push(`from .${name} import ${toTitle(name)}JoinedModel`);
+      imports.push(`from .${name} import ${toCamel(name)}JoinedModel`);
     });
     return indent_and_join(imports, 6);
   }
