@@ -85,14 +85,14 @@ const Entity = () => {
     setEntity(entity);
     setColumns((columns) => {
       if (columns.length === 0) {
-        return [{ name: pkName, type: "INT", pk: true, optional: false }];
+        return [{ name: pkName, type: "INT", pk: true, optional: true }];
       }
 
       columns[0] = {
         name: pkName,
         type: "INT",
         pk: true,
-        optional: false,
+        optional: true,
       };
       return [...columns];
     });
