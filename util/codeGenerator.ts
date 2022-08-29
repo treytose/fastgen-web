@@ -21,6 +21,8 @@ export default function generateCode(entity: string, columns: EColumn[]) {
   const pkName = `${entity}id`;
   const libName = `o${toCamel(entity)}`;
   const modelName = `${toCamel(entity)}Model`;
+  const updateModelName = `${toCamel(entity)}UpdateModel`;
+  const createModelName = `${toCamel(entity)}CreateModel`;
   const joinedModelName = `${toCamel(entity)}JoinedModel`;
   const className = toCamel(entity);
 
@@ -124,7 +126,7 @@ export default function generateCode(entity: string, columns: EColumn[]) {
   const routerCode = `
       from fastapi import APIRouter
       from app.libraries.lib${entity} import ${className}
-      from app.schemas.${entity} import ${modelName}
+      from app.schemas.${entity} import ${modelName}, ${updateModelName}, ${createModelName}
 
       router = APIRouter(tags=["${entity}"])
       ${libName} = ${className}()
@@ -142,11 +144,11 @@ export default function generateCode(entity: string, columns: EColumn[]) {
           return await ${libName}.get_${entity}(${pkName}, joined=joined)
 
       @router.post("/${entity}")
-      async def create_${entity}(${entity}: ${modelName}):
+      async def create_${entity}(${entity}: ${createModelName}):
           return await ${libName}.create_${entity}(${entity})
 
       @router.put("/${entity}/{${pkName}}")
-      async def update_${entity}(${pkName}: int, ${entity}: ${modelName}):
+      async def update_${entity}(${pkName}: int, ${entity}: ${updateModelName}):
           return await ${libName}.update_${entity}(${pkName}, ${entity})
 
       @router.delete("/${entity}/{${pkName}}")
@@ -224,7 +226,6 @@ ${generate_join_statements()}
             return ${pkName}
 
         async def update_${entity}(self, ${pkName}: int, ${entity}: ${modelName}):
-            ${entity}.${pkName} = ${pkName}
             error_no = await db.update("${entity}", "${pkName}", ${pkName}, ${entity}.dict())
             return error_no
 
@@ -289,7 +290,12 @@ ${generate_join_statements()}
     return indent_and_join(imports, 6);
   }
 
-  function format_schema_column(c: EColumn) {
+  // @arg remove_hidden - If true, columns with hideOnForm attribute of false will be excluded
+  function format_schema_column(
+    c: EColumn,
+    force_optional: boolean = false,
+    remove_hidden: boolean = false
+  ) {
     let columnString = `${c.name}: `;
     let queryArgs = [];
     let formOptions: {
@@ -298,12 +304,16 @@ ${generate_join_statements()}
       allowed_values?: string | string[];
     } = {};
 
+    if (remove_hidden && c.hideOnForm) {
+      return "";
+    }
+
     if (c.pk) {
-      formOptions.optional = 1;
+      formOptions.optional = 0;
       formOptions.display = 0;
     }
 
-    if (c.optional) {
+    if (c.optional || force_optional) {
       columnString += `Optional[${typeMap[c.type]}] `;
     } else {
       columnString += `${typeMap[c.type]} `;
@@ -359,8 +369,18 @@ ${generate_join_statements()}
   }
 
   const types = columns
-    // .filter((c) => !c.pk)
-    .map(format_schema_column)
+    .map((c) => format_schema_column(c))
+    .filter((x) => !!x)
+    .join(" \n          ");
+
+  const createTypes = columns
+    .map((c) => (c.pk ? null : format_schema_column(c, false, true)))
+    .filter((x) => !!x)
+    .join(" \n          ");
+
+  const optionalTypes = columns
+    .map((c) => (c.pk ? null : format_schema_column(c, true, true)))
+    .filter((x) => !!x)
     .join(" \n          ");
 
   const schemaCode = `
@@ -371,6 +391,13 @@ ${generate_schema_imports()}
       ${needsDatetimeImport ? "import datetime\n" : ""}
       class ${modelName}(BaseModel):          
           ${types}
+
+      class ${createModelName}(BaseModel):
+          ${createTypes}
+
+      class ${updateModelName}(BaseModel):
+          ${optionalTypes}
+
 
       class ${joinedModelName}(${modelName}):
 ${generate_joined_schema()}
