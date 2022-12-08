@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime
 
 class User(BaseModel):    
-    email: str = Query(..., max_length=64)
+    username: str = Query(..., max_length=64)
     signup_date: Optional[datetime] = Query(None, description='Date and time the user signed up')
 
 class UserInDB(User):    

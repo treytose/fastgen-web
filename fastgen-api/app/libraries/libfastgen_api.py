@@ -34,7 +34,9 @@ class Fastgen_api:
         os.chdir(os.path.join(fastgen_api.path, fastgen_api.name))
 
         if fastgen_api.pythonVersion == "python3.6":
-            subprocess.run("python3.6 -m venv venv", shell=True, check=True)            
+            subprocess.run("python3.6 -m venv venv", shell=True, check=True)   
+        elif fastgen_api.pythonVersion == "python3.10":
+            subprocess.run("python3.10 -m venv venv", shell=True, check=True)
         else:
             subprocess.run("python3.9 -m venv venv", shell=True, check=True)
 

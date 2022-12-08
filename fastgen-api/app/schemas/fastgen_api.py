@@ -6,7 +6,7 @@ class Fastgen_apiModel(BaseModel):
     name: str = Query(None, title="Name", description="API Name") 
     path: str = Query(None, title="Path", description="Absolute path to API") 
     template: str = Query(None, title="API Template", description="The base template to use when creating the API", allowed_values=["default", "auth-jwt", "auth-ad"])
-    pythonVersion: Optional[str] = Query('python3.9', title="Python Version", description="The version of Python to create the API with", optional=True, allowed_values=["python3.6", "python3.9"]) 
+    pythonVersion: Optional[str] = Query('python3.9', title="Python Version", description="The version of Python to create the API with", optional=True, allowed_values=["python3.6", "python3.9", "python3.10"]) 
     dbType: Optional[str] = Query('sqlite', title="Database Type", description="The database type to use", optional=True, allowed_values=["sqlite", "mysql"]) 
     dbHost: Optional[str] = Query("localhost", title="Database Hostname", description="The database hostname", optional=True)
     dbName: Optional[str] = Query('fast.db', title="Database Name", description="The name of the database or file", optional=True) 
